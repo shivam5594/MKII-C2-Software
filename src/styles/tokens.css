@@ -1,0 +1,95 @@
+:root {
+  /* ── Navy Ramp (backgrounds, surfaces) ── */
+  --navy-900: #060A12;
+  --navy-800: #0A0E1A;
+  --navy-700: #0D1117;
+  --navy-600: #131A24;
+  --navy-500: #1A2332;
+  --navy-400: #243044;
+  --navy-300: #3A4A62;
+  --navy-200: #5A6A82;
+  --navy-100: #8899AA;
+
+  /* ── Cyan Ramp (primary UI accent) ── */
+  --cyan-700: #007A8A;
+  --cyan-600: #00ACC1;
+  --cyan-500: #00E5FF;
+  --cyan-400: #00D4FF;
+  --cyan-300: #33E8FF;
+  --cyan-200: #80F0FF;
+  --cyan-100: #B3F5FF;
+
+  /* ── Amber Ramp (investor/strategic only) ── */
+  --amber-500: #C9A84C;
+  --amber-400: #D4B86A;
+  --amber-300: #E0C888;
+  --amber-200: #ECD8A6;
+  --amber-100: #F5ECCC;
+
+  /* ── Status Colors ── */
+  --status-nominal: #00E5FF;
+  --status-caution: #FFB800;
+  --status-warning: #FF6B35;
+  --status-critical: #E24B4A;
+  --status-offline: #3A4A62;
+  --status-active: #00FF88;
+
+  /* ── Sphere Confidence Gradient ── */
+  --sphere-nominal: #00E5FF;
+  --sphere-degraded: #FFB800;
+  --sphere-critical: #E24B4A;
+  --sphere-anomalous: #FF00FF;
+  --sphere-wireframe: rgba(0, 229, 255, 0.08);
+
+  /* ── Classification Bar ── */
+  --class-external: #00E5FF;
+  --class-investor: #C9A84C;
+  --class-internal: #5A6A7A;
+  --class-classified: #E24B4A;
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+
+  /* ── Type Scale ── */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Border Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (glow effects for dark theme) ── */
+  --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.15);
+  --glow-cyan-strong: 0 0 40px rgba(0, 229, 255, 0.3);
+  --glow-amber: 0 0 20px rgba(201, 168, 76, 0.15);
+  --glow-red: 0 0 20px rgba(226, 75, 74, 0.2);
+
+  /* ── Panel dimensions ── */
+  --panel-left-width: 280px;
+  --panel-right-width: 320px;
+  --topbar-height: 48px;
+  --bottombar-height: 40px;
+  --classbar-height: 4px;
+}

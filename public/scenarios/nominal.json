@@ -1,0 +1,50 @@
+{
+  "id": "nominal",
+  "name": "Nominal Flight",
+  "description": "All systems operational — baseline cruise at 3000m AGL",
+  "duration_seconds": 60,
+  "timeline": [
+    {
+      "t": 0,
+      "threat": {
+        "gnss_l1_snr": 0.96, "gnss_l5_snr": 0.95, "gnss_navic_l5": 0.94, "gnss_navic_s": 0.97,
+        "gnss_glonass": 0.93, "gnss_pdop": 0.96, "gnss_raim": 0.98, "gnss_spoof_delta": 0.97,
+        "imu_gyro_x": 0.99, "imu_gyro_y": 0.98, "imu_gyro_z": 0.99,
+        "imu_accel_bias": 0.97, "imu_alignment": 0.99, "imu_temperature": 0.96,
+        "tercom_ralt": 0.92, "tercom_dem_corr": 0.90, "tercom_terrain_var": 0.88, "tercom_update_age": 0.91,
+        "magnav_field_str": 0.85, "magnav_map_corr": 0.83, "magnav_anomaly": 0.81,
+        "scene_eo_quality": 0.89, "scene_dsmac_corr": 0.87, "scene_vio": 0.90, "scene_lighting": 0.92,
+        "ew_jam_power": 0.97, "ew_spoof_conf": 0.98, "ew_rf_scan": 0.96,
+        "plat_airspeed": 0.98, "plat_altitude": 0.97, "plat_attitude": 0.99, "plat_engine": 0.96,
+        "comms_mitl_link": 0.94, "comms_satcom": 0.93
+      },
+      "response": {
+        "resp_inertial_lock": 0.95, "resp_gnss_reject": 0.10, "resp_antijam_power": 0.10,
+        "resp_crpa_null": 0.10, "resp_tercom_activate": 0.15, "resp_magnav_activate": 0.12,
+        "resp_scene_activate": 0.13, "resp_ekf_reweight": 0.20, "resp_alt_adjust": 0.10,
+        "resp_route_modify": 0.10, "resp_fusion_conf": 0.95, "resp_operator_alert": 0.10
+      }
+    },
+    {
+      "t": 30,
+      "threat": {
+        "gnss_l1_snr": 0.97, "gnss_l5_snr": 0.96, "gnss_navic_l5": 0.95, "gnss_navic_s": 0.96,
+        "gnss_glonass": 0.94, "gnss_pdop": 0.95, "gnss_raim": 0.97, "gnss_spoof_delta": 0.96,
+        "imu_gyro_x": 0.98, "imu_gyro_y": 0.99, "imu_gyro_z": 0.98,
+        "imu_accel_bias": 0.96, "imu_alignment": 0.98, "imu_temperature": 0.97
+      },
+      "response": {
+        "resp_inertial_lock": 0.94, "resp_fusion_conf": 0.96
+      }
+    },
+    {
+      "t": 60,
+      "threat": {
+        "gnss_l1_snr": 0.95, "gnss_l5_snr": 0.94, "gnss_navic_l5": 0.96, "gnss_navic_s": 0.95
+      },
+      "response": {
+        "resp_inertial_lock": 0.96, "resp_fusion_conf": 0.95
+      }
+    }
+  ]
+}

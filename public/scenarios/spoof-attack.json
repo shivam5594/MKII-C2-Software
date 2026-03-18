@@ -1,0 +1,109 @@
+{
+  "id": "spoof-attack",
+  "name": "Spoofing Attack + Detection",
+  "description": "GNSS spoofing detected via inertial cross-check, AI rejects and switches sources",
+  "duration_seconds": 60,
+  "timeline": [
+    {
+      "t": 0,
+      "threat": {
+        "gnss_l1_snr": 0.96, "gnss_l5_snr": 0.95, "gnss_navic_l5": 0.94, "gnss_navic_s": 0.97,
+        "gnss_glonass": 0.93, "gnss_pdop": 0.96, "gnss_raim": 0.98, "gnss_spoof_delta": 0.97,
+        "imu_gyro_x": 0.99, "imu_gyro_y": 0.98, "imu_gyro_z": 0.99,
+        "imu_accel_bias": 0.97, "imu_alignment": 0.99, "imu_temperature": 0.96,
+        "tercom_ralt": 0.15, "tercom_dem_corr": 0.10, "tercom_terrain_var": 0.12, "tercom_update_age": 0.08,
+        "magnav_field_str": 0.12, "magnav_map_corr": 0.10, "magnav_anomaly": 0.08,
+        "scene_eo_quality": 0.14, "scene_dsmac_corr": 0.10, "scene_vio": 0.12, "scene_lighting": 0.15,
+        "ew_jam_power": 0.97, "ew_spoof_conf": 0.98, "ew_rf_scan": 0.96,
+        "plat_airspeed": 0.98, "plat_altitude": 0.97, "plat_attitude": 0.99, "plat_engine": 0.96,
+        "comms_mitl_link": 0.94, "comms_satcom": 0.93
+      },
+      "response": {
+        "resp_inertial_lock": 0.95, "resp_gnss_reject": 0.10, "resp_antijam_power": 0.10,
+        "resp_crpa_null": 0.10, "resp_tercom_activate": 0.10, "resp_magnav_activate": 0.10,
+        "resp_scene_activate": 0.10, "resp_ekf_reweight": 0.20, "resp_alt_adjust": 0.10,
+        "resp_route_modify": 0.10, "resp_fusion_conf": 0.95, "resp_operator_alert": 0.10
+      }
+    },
+    {
+      "t": 5,
+      "threat": {
+        "gnss_l1_snr": 1.05, "gnss_l5_snr": 1.03, "gnss_navic_l5": 1.02, "gnss_navic_s": 1.04,
+        "gnss_glonass": 1.06, "gnss_pdop": 0.85, "gnss_raim": 0.80, "gnss_spoof_delta": 1.10,
+        "ew_spoof_conf": 0.70
+      },
+      "response": {
+        "resp_ekf_reweight": 0.40
+      }
+    },
+    {
+      "t": 10,
+      "threat": {
+        "gnss_l1_snr": 1.25, "gnss_l5_snr": 1.20, "gnss_navic_l5": 1.18, "gnss_navic_s": 1.22,
+        "gnss_glonass": 1.30, "gnss_pdop": 0.60, "gnss_raim": 0.45, "gnss_spoof_delta": 1.40,
+        "ew_spoof_conf": 0.35
+      },
+      "response": {
+        "resp_ekf_reweight": 0.65, "resp_gnss_reject": 0.40, "resp_operator_alert": 0.50
+      }
+    },
+    {
+      "t": 14,
+      "threat": {
+        "gnss_l1_snr": 1.50, "gnss_l5_snr": 1.45, "gnss_navic_l5": 1.35, "gnss_navic_s": 1.42,
+        "gnss_glonass": 1.55, "gnss_pdop": 0.30, "gnss_raim": 0.15, "gnss_spoof_delta": 1.60,
+        "ew_spoof_conf": 0.12
+      },
+      "response": {
+        "resp_gnss_reject": 0.80, "resp_ekf_reweight": 0.85, "resp_operator_alert": 0.75,
+        "resp_inertial_lock": 0.90
+      }
+    },
+    {
+      "t": 18,
+      "threat": {
+        "gnss_l1_snr": 0.05, "gnss_l5_snr": 0.06, "gnss_navic_l5": 0.04, "gnss_navic_s": 0.05,
+        "gnss_glonass": 0.03, "gnss_pdop": 0.05, "gnss_raim": 0.04, "gnss_spoof_delta": 0.08,
+        "tercom_ralt": 0.45, "tercom_dem_corr": 0.40, "tercom_terrain_var": 0.38, "tercom_update_age": 0.35,
+        "magnav_field_str": 0.35, "magnav_map_corr": 0.30, "magnav_anomaly": 0.28,
+        "scene_eo_quality": 0.40, "scene_dsmac_corr": 0.35, "scene_vio": 0.42, "scene_lighting": 0.45,
+        "ew_spoof_conf": 0.05
+      },
+      "response": {
+        "resp_gnss_reject": 0.95, "resp_tercom_activate": 0.55, "resp_magnav_activate": 0.40,
+        "resp_scene_activate": 0.45, "resp_ekf_reweight": 0.92,
+        "resp_inertial_lock": 0.95, "resp_fusion_conf": 0.68
+      }
+    },
+    {
+      "t": 30,
+      "threat": {
+        "gnss_l1_snr": 0.02, "gnss_l5_snr": 0.03, "gnss_navic_l5": 0.02, "gnss_navic_s": 0.03,
+        "gnss_glonass": 0.02, "gnss_pdop": 0.02, "gnss_raim": 0.02, "gnss_spoof_delta": 0.03,
+        "tercom_ralt": 0.82, "tercom_dem_corr": 0.78, "tercom_terrain_var": 0.75, "tercom_update_age": 0.80,
+        "magnav_field_str": 0.68, "magnav_map_corr": 0.65, "magnav_anomaly": 0.62,
+        "scene_eo_quality": 0.80, "scene_dsmac_corr": 0.78, "scene_vio": 0.85, "scene_lighting": 0.88,
+        "ew_spoof_conf": 0.03
+      },
+      "response": {
+        "resp_gnss_reject": 0.95, "resp_tercom_activate": 0.85, "resp_magnav_activate": 0.70,
+        "resp_scene_activate": 0.85, "resp_ekf_reweight": 0.95,
+        "resp_fusion_conf": 0.85, "resp_inertial_lock": 0.96
+      }
+    },
+    {
+      "t": 60,
+      "threat": {
+        "gnss_l1_snr": 0.02, "gnss_l5_snr": 0.02, "gnss_navic_l5": 0.02, "gnss_navic_s": 0.02,
+        "gnss_glonass": 0.01, "gnss_pdop": 0.02, "gnss_raim": 0.02, "gnss_spoof_delta": 0.02,
+        "tercom_ralt": 0.92, "tercom_dem_corr": 0.90, "tercom_terrain_var": 0.88, "tercom_update_age": 0.91,
+        "magnav_field_str": 0.78, "magnav_map_corr": 0.76, "magnav_anomaly": 0.74,
+        "scene_eo_quality": 0.92, "scene_dsmac_corr": 0.90, "scene_vio": 0.94, "scene_lighting": 0.95
+      },
+      "response": {
+        "resp_gnss_reject": 0.95, "resp_tercom_activate": 0.92, "resp_magnav_activate": 0.78,
+        "resp_scene_activate": 0.94, "resp_fusion_conf": 0.92
+      }
+    }
+  ]
+}
