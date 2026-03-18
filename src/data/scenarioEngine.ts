@@ -21,7 +21,8 @@ export interface InterpolatedState {
  * Load a scenario JSON from public/scenarios/.
  */
 export async function loadScenario(id: string): Promise<ScenarioData> {
-  const res = await fetch(`/scenarios/${id}.json`)
+  const base = import.meta.env.BASE_URL
+  const res = await fetch(`${base}scenarios/${id}.json`)
   if (!res.ok) throw new Error(`Failed to load scenario: ${id}`)
   return res.json()
 }
