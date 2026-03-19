@@ -15,6 +15,7 @@
         "magnav_field_str": 0.12, "magnav_map_corr": 0.10, "magnav_anomaly": 0.08,
         "scene_eo_quality": 0.14, "scene_dsmac_corr": 0.10, "scene_vio": 0.12, "scene_lighting": 0.15,
         "ew_jam_power": 0.97, "ew_spoof_conf": 0.98, "ew_rf_scan": 0.96,
+        "rf_homing_snr": 0.38, "rf_homing_lock": 0.36, "rf_homing_bearing": 0.40,
         "plat_airspeed": 0.98, "plat_altitude": 0.97, "plat_attitude": 0.99, "plat_engine": 0.96,
         "comms_mitl_link": 0.94, "comms_satcom": 0.93
       },
@@ -30,7 +31,8 @@
       "threat": {
         "gnss_l1_snr": 0.72, "gnss_l5_snr": 0.78, "gnss_navic_l5": 0.80, "gnss_navic_s": 0.88,
         "gnss_glonass": 0.68, "gnss_pdop": 0.65, "gnss_raim": 0.70, "gnss_spoof_delta": 0.90,
-        "ew_jam_power": 0.55, "ew_rf_scan": 0.60
+        "ew_jam_power": 0.55, "ew_rf_scan": 0.60,
+        "rf_homing_snr": 0.30, "rf_homing_lock": 0.28, "rf_homing_bearing": 0.32
       },
       "response": {
         "resp_antijam_power": 0.45, "resp_crpa_null": 0.40
@@ -44,7 +46,8 @@
         "tercom_ralt": 0.55, "tercom_dem_corr": 0.50, "tercom_terrain_var": 0.48, "tercom_update_age": 0.45,
         "magnav_field_str": 0.42, "magnav_map_corr": 0.38, "magnav_anomaly": 0.35,
         "scene_eo_quality": 0.30, "scene_dsmac_corr": 0.25, "scene_vio": 0.28, "scene_lighting": 0.32,
-        "ew_jam_power": 0.30, "ew_rf_scan": 0.35
+        "ew_jam_power": 0.30, "ew_rf_scan": 0.35,
+        "rf_homing_snr": 0.20, "rf_homing_lock": 0.18, "rf_homing_bearing": 0.22
       },
       "response": {
         "resp_antijam_power": 0.75, "resp_crpa_null": 0.70,
@@ -61,7 +64,8 @@
         "tercom_ralt": 0.82, "tercom_dem_corr": 0.78, "tercom_terrain_var": 0.75, "tercom_update_age": 0.80,
         "magnav_field_str": 0.70, "magnav_map_corr": 0.68, "magnav_anomaly": 0.65,
         "scene_eo_quality": 0.75, "scene_dsmac_corr": 0.72, "scene_vio": 0.78, "scene_lighting": 0.80,
-        "ew_jam_power": 0.15, "ew_rf_scan": 0.20
+        "ew_jam_power": 0.15, "ew_rf_scan": 0.20,
+        "rf_homing_snr": 0.15, "rf_homing_lock": 0.12, "rf_homing_bearing": 0.16
       },
       "response": {
         "resp_antijam_power": 0.90, "resp_crpa_null": 0.85,
@@ -79,7 +83,8 @@
         "tercom_ralt": 0.91, "tercom_dem_corr": 0.88, "tercom_terrain_var": 0.85, "tercom_update_age": 0.90,
         "magnav_field_str": 0.78, "magnav_map_corr": 0.76, "magnav_anomaly": 0.74,
         "scene_eo_quality": 0.90, "scene_dsmac_corr": 0.88, "scene_vio": 0.92, "scene_lighting": 0.94,
-        "ew_jam_power": 0.08, "ew_rf_scan": 0.12
+        "ew_jam_power": 0.08, "ew_rf_scan": 0.12,
+        "rf_homing_snr": 0.12, "rf_homing_lock": 0.10, "rf_homing_bearing": 0.13
       },
       "response": {
         "resp_antijam_power": 0.95, "resp_crpa_null": 0.90,

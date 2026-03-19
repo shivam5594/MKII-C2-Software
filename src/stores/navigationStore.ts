@@ -1,6 +1,20 @@
 import { create } from 'zustand'
 import type { SphereParameterDefinition } from '../types/sphere'
 import { THREAT_SPHERE_PARAMETERS, RESPONSE_SPHERE_PARAMETERS } from '../data/navParameters'
+import type {
+  TechniqueId,
+  TechniqueState,
+  FusionState,
+  MissionState,
+  EnvironmentState,
+} from '../types/navigation'
+import {
+  TECHNIQUE_IDS,
+  defaultTechniqueState,
+  defaultFusionState,
+  defaultMissionState,
+  defaultEnvironmentState,
+} from '../types/navigation'
 
 export interface ParameterState {
   confidence: number
@@ -9,14 +23,28 @@ export interface ParameterState {
 }
 
 interface NavigationStore {
-  /** Confidence values keyed by parameter id */
+  // ── Sensor-level params (drive sphere rendering) ──
   parameters: Record<string, ParameterState>
-  /** Update a single parameter's confidence */
   setConfidence: (id: string, confidence: number) => void
-  /** Batch update multiple parameters */
   batchUpdate: (updates: Record<string, Partial<ParameterState>>) => void
-  /** Set all parameters to a uniform confidence */
   setAllConfidence: (confidence: number) => void
+
+  // ── Technique-level state (derived, drives telemetry graphs) ──
+  techniques: Record<TechniqueId, TechniqueState>
+  setTechniqueState: (id: TechniqueId, state: Partial<TechniqueState>) => void
+  setAllTechniques: (states: Record<TechniqueId, TechniqueState>) => void
+
+  // ── Fusion core state ──
+  fusion: FusionState
+  setFusion: (state: Partial<FusionState>) => void
+
+  // ── Mission state ──
+  mission: MissionState
+  setMission: (state: Partial<MissionState>) => void
+
+  // ── Environment state ──
+  environment: EnvironmentState
+  setEnvironment: (state: Partial<EnvironmentState>) => void
 }
 
 function initParameters(defs: SphereParameterDefinition[], defaultConfidence: number): Record<string, ParameterState> {
@@ -31,9 +59,18 @@ function initParameters(defs: SphereParameterDefinition[], defaultConfidence: nu
   return params
 }
 
+function initTechniques(): Record<TechniqueId, TechniqueState> {
+  const t = {} as Record<TechniqueId, TechniqueState>
+  for (const id of TECHNIQUE_IDS) {
+    t[id] = defaultTechniqueState()
+  }
+  return t
+}
+
 const allDefs = [...THREAT_SPHERE_PARAMETERS, ...RESPONSE_SPHERE_PARAMETERS]
 
 export const useNavigationStore = create<NavigationStore>((set) => ({
+  // ── Sensor params ──
   parameters: initParameters(allDefs, 0.95),
 
   setConfidence: (id, confidence) =>
@@ -61,4 +98,42 @@ export const useNavigationStore = create<NavigationStore>((set) => ({
       }
       return { parameters: next }
     }),
+
+  // ── Technique state ──
+  techniques: initTechniques(),
+
+  setTechniqueState: (id, patch) =>
+    set((state) => ({
+      techniques: {
+        ...state.techniques,
+        [id]: { ...state.techniques[id], ...patch },
+      },
+    })),
+
+  setAllTechniques: (states) =>
+    set(() => ({ techniques: states })),
+
+  // ── Fusion ──
+  fusion: defaultFusionState(),
+
+  setFusion: (patch) =>
+    set((state) => ({
+      fusion: { ...state.fusion, ...patch },
+    })),
+
+  // ── Mission ──
+  mission: defaultMissionState(),
+
+  setMission: (patch) =>
+    set((state) => ({
+      mission: { ...state.mission, ...patch },
+    })),
+
+  // ── Environment ──
+  environment: defaultEnvironmentState(),
+
+  setEnvironment: (patch) =>
+    set((state) => ({
+      environment: { ...state.environment, ...patch },
+    })),
 }))

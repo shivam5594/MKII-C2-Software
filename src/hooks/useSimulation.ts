@@ -4,6 +4,7 @@ import { useUIStore } from '../stores/uiStore'
 import { useNavigationStore } from '../stores/navigationStore'
 import type { ParameterState } from '../stores/navigationStore'
 import type { ActionLogEntry } from '../stores/uiStore'
+import { deriveTechniqueStates, deriveFusionState } from '../data/parameterMap'
 
 // Predefined action triggers based on scenario + time thresholds
 interface ActionTrigger {
@@ -67,7 +68,15 @@ export function useSimulation() {
           updates[id] = { confidence }
         }
 
-        useNavigationStore.getState().batchUpdate(updates)
+        const navStore = useNavigationStore.getState()
+        navStore.batchUpdate(updates)
+
+        // Derive technique-level and fusion state from updated sensor params
+        const updatedParams = useNavigationStore.getState().parameters
+        const techniqueStates = deriveTechniqueStates(updatedParams)
+        const fusionState = deriveFusionState(techniqueStates)
+        navStore.setAllTechniques(techniqueStates)
+        navStore.setFusion(fusionState)
 
         // Fire action triggers
         for (const trigger of ACTION_TRIGGERS) {

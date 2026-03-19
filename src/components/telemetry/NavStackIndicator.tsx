@@ -38,6 +38,12 @@ const NAV_LAYERS: NavLayer[] = [
     paramIds: ['scene_eo_quality', 'scene_dsmac_corr', 'scene_vio', 'scene_lighting'],
     color: '#80F0FF',
   },
+  {
+    label: 'RF Homing',
+    shortLabel: 'RF',
+    paramIds: ['rf_homing_snr', 'rf_homing_lock', 'rf_homing_bearing'],
+    color: '#D4537E',
+  },
 ]
 
 function getBarColor(confidence: number, baseColor: string): string {

@@ -36,6 +36,11 @@ export const THREAT_SPHERE_PARAMETERS: SphereParameterDefinition[] = [
   { id: 'scene_vio',         label: 'Visual Odometry',     shortLabel: 'VIO',  group: 'SCENE_MATCH' },
   { id: 'scene_lighting',    label: 'Scene Lighting',      shortLabel: 'LGT',  group: 'SCENE_MATCH' },
 
+  // RF Homing group
+  { id: 'rf_homing_snr',     label: 'RF Homing SNR',       shortLabel: 'RSN',  group: 'RF_HOMING' },
+  { id: 'rf_homing_lock',    label: 'RF Lock Status',      shortLabel: 'RLK',  group: 'RF_HOMING' },
+  { id: 'rf_homing_bearing', label: 'RF Bearing Quality',  shortLabel: 'RBQ',  group: 'RF_HOMING' },
+
   // EW detection group
   { id: 'ew_jam_power',      label: 'Jam Power Level',     shortLabel: 'JAM',  group: 'EW_DETECT' },
   { id: 'ew_spoof_conf',     label: 'Spoof Confidence',    shortLabel: 'SPF',  group: 'EW_DETECT' },

@@ -15,6 +15,7 @@
         "magnav_field_str": 0.12, "magnav_map_corr": 0.10, "magnav_anomaly": 0.08,
         "scene_eo_quality": 0.14, "scene_dsmac_corr": 0.10, "scene_vio": 0.12, "scene_lighting": 0.15,
         "ew_jam_power": 0.97, "ew_spoof_conf": 0.98, "ew_rf_scan": 0.96,
+        "rf_homing_snr": 0.38, "rf_homing_lock": 0.36, "rf_homing_bearing": 0.41,
         "plat_airspeed": 0.98, "plat_altitude": 0.97, "plat_attitude": 0.99, "plat_engine": 0.96,
         "comms_mitl_link": 0.94, "comms_satcom": 0.93
       },
