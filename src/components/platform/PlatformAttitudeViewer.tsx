@@ -235,8 +235,8 @@ function ModelWithFallback() {
 function CameraSetup() {
   const { camera } = useThree()
   useEffect(() => {
-    camera.position.set(3, 1.2, 3)
-    camera.lookAt(0, 0, 0)
+    camera.position.set(3, 0.5, 3)
+    camera.lookAt(0, 0.2, 0)
   }, [camera])
   return null
 }
@@ -260,7 +260,7 @@ export default function PlatformAttitudeViewer() {
         backgroundColor: '#060A12',
       }}>
         <Canvas
-          camera={{ position: [3, 1.2, 3], fov: 32, near: 0.1, far: 50 }}
+          camera={{ position: [3, 0.5, 3], fov: 32, near: 0.1, far: 50 }}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent' }}
         >
