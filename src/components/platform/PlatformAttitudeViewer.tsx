@@ -144,9 +144,9 @@ function PlatformModel() {
     clone.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
     clone.scale.setScalar(scale)
 
-    // Rotate model so nose points along -Z (Three.js forward convention)
-    // Most CAD exports have nose along +Y or +X — try +Y first
-    clone.rotation.set(-Math.PI / 2, 0, 0)
+    // Align model: rotate so nose points along +Z (toward camera)
+    // Shahed 136 GLB: nose is along +Y in model space, rotate to +Z
+    clone.rotation.set(Math.PI / 2, Math.PI, 0)
 
     // Visible light grey body
     clone.traverse((child) => {

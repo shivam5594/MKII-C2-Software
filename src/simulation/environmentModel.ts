@@ -66,6 +66,21 @@ export function deriveEnvironmentUpdates(
 
   // Pull live values from telemetry when available
   const altAgl = telemetry?.alt_agl ?? 1500
+  const altMsl = telemetry?.alt_msl ?? 2000
+
+  // Dynamic environment based on altitude and conditions
+  // Cloud cover increases slightly at higher altitudes
+  const cloudCover = Math.min(0.8, 0.05 + altMsl * 0.00005 + Math.sin(dt * 0.001) * 0.02)
+  // Visibility decreases with cloud cover, improves at altitude
+  const visibility = Math.max(5, 18 - cloudCover * 10 + (altMsl > 1500 ? 2 : 0))
+  // Thermal contrast decreases with cloud cover
+  const thermalContrast = Math.max(0.2, 0.75 - cloudCover * 0.3)
+  // EO quality degrades with clouds and improves at lower altitude
+  const eoQuality = Math.max(0.3, 0.9 - cloudCover * 0.25 - (altMsl > 3000 ? 0.1 : 0))
+  // Terrain coverage varies with region (higher coverage over mapped areas)
+  const terrainCoverage = altAgl < 500 ? 0.95 : altAgl < 2000 ? 0.88 : 0.75
+  // Magnetic field quality varies slightly
+  const magQuality = 0.72 + Math.sin(currentEnv.gnss_cn0_dbhz * 0.05) * 0.05
 
   return {
     gnss_cn0_dbhz: exponentialApproach(currentEnv.gnss_cn0_dbhz, targets.gnss_cn0_dbhz, dt, tauCn0),
@@ -74,15 +89,15 @@ export function deriveEnvironmentUpdates(
     ),
     rf_noise_floor_dbm: exponentialApproach(currentEnv.rf_noise_floor_dbm, targets.rf_noise_floor_dbm, dt, tauNoise),
     ew_threat_detected: targets.ew_threat_detected,
-    cloud_cover: 0.10,
-    visibility_km: 15,
-    thermal_contrast: 0.70,
-    terrain_roughness: 0.60,
-    terrain_map_coverage: 0.90,
-    magnetic_field_quality: 0.75,
+    cloud_cover: Math.round(cloudCover * 100) / 100,
+    visibility_km: Math.round(visibility * 10) / 10,
+    thermal_contrast: Math.round(thermalContrast * 100) / 100,
+    terrain_roughness: 0.55 + Math.sin(altAgl * 0.001) * 0.1,
+    terrain_map_coverage: Math.round(terrainCoverage * 100) / 100,
+    magnetic_field_quality: Math.round(magQuality * 100) / 100,
     magnetic_map_loaded: true,
-    eo_image_quality: 0.85,
-    altitude_agl_m: altAgl,
+    eo_image_quality: Math.round(eoQuality * 100) / 100,
+    altitude_agl_m: Math.round(altAgl),
   }
 }
 

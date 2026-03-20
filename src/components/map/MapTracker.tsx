@@ -238,11 +238,10 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
         <BlimpItem label="DTG" value={`${distKm} km`} />
       </div>
 
-      {/* Camera lock button */}
+      {/* Camera lock button — top-right, below map controls */}
       <button
         onClick={() => {
           setCameraLocked(true)
-          // Immediately snap to LM
           const lat = useTelemetryStore.getState().values.lat
           const lon = useTelemetryStore.getState().values.lon
           const hdg = useTelemetryStore.getState().values.psi ?? 0
@@ -261,25 +260,24 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
         className="font-mono"
         style={{
           position: 'absolute',
-          bottom: 16,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: 56,
+          right: 12,
           zIndex: 15,
           pointerEvents: 'auto',
-          padding: '6px 16px',
-          borderRadius: '8px',
+          padding: '5px 10px',
+          borderRadius: '6px',
           border: `1px solid ${cameraLocked ? 'rgba(0,229,255,0.3)' : 'rgba(255,255,255,0.15)'}`,
-          backgroundColor: cameraLocked ? 'rgba(0,229,255,0.1)' : 'rgba(10,14,26,0.9)',
+          backgroundColor: cameraLocked ? 'rgba(0,229,255,0.12)' : 'rgba(10,14,26,0.9)',
           color: cameraLocked ? '#00E5FF' : '#8899AA',
-          fontSize: '10px',
+          fontSize: '9px',
           fontWeight: 600,
-          letterSpacing: '0.1em',
+          letterSpacing: '0.08em',
           cursor: 'pointer',
           textTransform: 'uppercase',
           backdropFilter: 'blur(8px)',
         }}
       >
-        {cameraLocked ? '◉ LOCKED ON LM' : '○ LOCK ON LM'}
+        {cameraLocked ? '◉ TRACKING LM' : '○ LOCK ON LM'}
       </button>
     </>
   )
