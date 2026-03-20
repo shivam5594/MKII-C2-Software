@@ -24,16 +24,16 @@ function CompassRing3D() {
     if (diff < -Math.PI) diff += 2 * Math.PI
     targetYaw.current += diff * 0.08
 
-    // Only rotate the heading pointer, not the whole compass
-    pointerRef.current.rotation.y = -targetYaw.current
+    // Only rotate the heading pointer (positive Y rotation = clockwise from N when X is negated)
+    pointerRef.current.rotation.y = targetYaw.current
   })
 
-  // Ring circle points
+  // Ring circle points (negate X to match map convention: E=right, W=left)
   const ringPoints = useMemo(() => {
     const pts: [number, number, number][] = []
     for (let i = 0; i <= 128; i++) {
       const a = (i / 128) * Math.PI * 2
-      pts.push([Math.sin(a) * COMPASS_RADIUS, 0, Math.cos(a) * COMPASS_RADIUS])
+      pts.push([-Math.sin(a) * COMPASS_RADIUS, 0, Math.cos(a) * COMPASS_RADIUS])
     }
     return pts
   }, [])
@@ -47,8 +47,8 @@ function CompassRing3D() {
       const inner = COMPASS_RADIUS - (isMajor ? 0.12 : 0.06)
       segments.push({
         points: [
-          [Math.sin(rad) * inner, 0, Math.cos(rad) * inner],
-          [Math.sin(rad) * COMPASS_RADIUS, 0, Math.cos(rad) * COMPASS_RADIUS],
+          [-Math.sin(rad) * inner, 0, Math.cos(rad) * inner],
+          [-Math.sin(rad) * COMPASS_RADIUS, 0, Math.cos(rad) * COMPASS_RADIUS],
         ],
         major: isMajor,
       })
@@ -82,7 +82,7 @@ function CompassRing3D() {
         return (
           <Text
             key={label}
-            position={[Math.sin(rad) * labelR, 0.01, Math.cos(rad) * labelR]}
+            position={[-Math.sin(rad) * labelR, 0.01, Math.cos(rad) * labelR]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.22}
             fontWeight={700}
