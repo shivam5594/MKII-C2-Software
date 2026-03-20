@@ -1,5 +1,6 @@
 import { TECHNIQUE_IDS } from '../../types/navigation'
 import { useSparklineBuffer } from '../../hooks/useSparklineBuffer'
+import PlatformAttitudeViewer from '../platform/PlatformAttitudeViewer'
 import FusionSummaryCard from './FusionSummaryCard'
 import TechniqueCard from './TechniqueCard'
 import MissionStateCard from './MissionStateCard'
@@ -30,6 +31,9 @@ export default function SensorPanel() {
           gap: '6px',
         }}
       >
+        {/* Platform Attitude + Compass */}
+        <PlatformAttitudeViewer />
+
         {/* Fusion State */}
         <FusionSummaryCard />
 
