@@ -59,7 +59,7 @@ function CompassRing3D() {
   const cardinals: [number, string][] = [[0, 'N'], [90, 'E'], [180, 'S'], [270, 'W']]
 
   return (
-    <group position={[0, -0.9, 0]}>
+    <group position={[0, -0.5, 0]}>
       {/* Fixed compass ring — N always at +Z (top of view) */}
       <Line points={ringPoints} color={CYAN} lineWidth={1} transparent opacity={0.4} />
 
@@ -174,13 +174,13 @@ function PlatformModel() {
     const pivot = new THREE.Group()
     pivot.add(clone)
     // Step 1: Bring nose to horizontal plane (from model's native -Y to +Z)
-    pivot.rotation.set(Math.PI / 2, 0, 0)
+    pivot.rotation.set(Math.PI, 0, 0)
 
     return pivot
   }, [gltf])
 
   return (
-    <group position={[0, 0.5, 0]}>
+    <group position={[0, 0, 0]}>
       <group ref={groupRef}>
         <primitive object={scene} />
       </group>
@@ -194,7 +194,7 @@ function FallbackAircraft() {
   useAttitudeAnimation(groupRef)
 
   return (
-    <group position={[0, 0.5, 0]}>
+    <group position={[0, 0, 0]}>
     <group ref={groupRef}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.08, 0.12, 2, 8]} />
@@ -257,8 +257,8 @@ function ModelWithFallback() {
 function CameraSetup() {
   const { camera } = useThree()
   useEffect(() => {
-    camera.position.set(3, 0.8, 3)
-    camera.lookAt(0, 0.3, 0)
+    camera.position.set(3, 0.6, 3)
+    camera.lookAt(0, -0.1, 0)
   }, [camera])
   return null
 }
@@ -282,7 +282,7 @@ export default function PlatformAttitudeViewer() {
         backgroundColor: '#060A12',
       }}>
         <Canvas
-          camera={{ position: [3, 0.8, 3], fov: 32, near: 0.1, far: 50 }}
+          camera={{ position: [3, 0.6, 3], fov: 32, near: 0.1, far: 50 }}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent' }}
         >
