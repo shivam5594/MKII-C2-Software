@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTelemetryStore } from '../../stores/telemetryStore'
 
 // Mission route
@@ -26,8 +26,6 @@ interface MapTrackerProps {
 
 export default function MapTracker({ mapInstance }: MapTrackerProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markerRef = useRef<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trailPolyRef = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const projectedPolyRef = useRef<any>(null)
@@ -40,8 +38,30 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
   const lastCameraUpdate = useRef(0)
   const [cameraLocked, setCameraLocked] = useState(true)
 
+  // LM screen position for HTML overlay
+  const [lmScreen, setLmScreen] = useState<{ x: number; y: number } | null>(null)
+  const [lmHeading, setLmHeading] = useState(0)
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapplsGlobal = (window as any).mappls
+
+  // Project lat/lng to screen pixel
+  const projectToScreen = useCallback((lat: number, lng: number): { x: number; y: number } | null => {
+    if (!mapInstance) return null
+    try {
+      // Mappls/Mapbox GL project method
+      if (typeof mapInstance.project === 'function') {
+        const pt = mapInstance.project({ lat, lng })
+        if (pt && typeof pt.x === 'number') return { x: pt.x, y: pt.y }
+      }
+      // Try latLngToContainerPoint (Leaflet-style)
+      if (typeof mapInstance.latLngToContainerPoint === 'function') {
+        const pt = mapInstance.latLngToContainerPoint({ lat, lng })
+        if (pt && typeof pt.x === 'number') return { x: pt.x, y: pt.y }
+      }
+    } catch { /* ignore */ }
+    return null
+  }, [mapInstance])
 
   // Unlock camera when user interacts with map
   useEffect(() => {
@@ -52,7 +72,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
       mapInstance.on('zoomstart', unlock)
       mapInstance.on('pitchstart', unlock)
       mapInstance.on('rotatestart', unlock)
-    } catch { /* events may not exist */ }
+    } catch { /* ignore */ }
     return () => {
       try {
         mapInstance.off('dragstart', unlock)
@@ -76,11 +96,10 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
     } catch { /* ignore */ }
 
     // Projected route (dashed, dim)
-    const planned = generatePlannedRoute()
     try {
       projectedPolyRef.current = mapplsGlobal.Polyline({
         map: mapInstance,
-        path: planned,
+        path: generatePlannedRoute(),
         strokeColor: '#00E5FF',
         strokeOpacity: 0.25,
         strokeWeight: 2,
@@ -93,13 +112,6 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
       originMarkerRef.current = mapplsGlobal.Marker({
         map: mapInstance,
         position: ORIGIN,
-        icon: {
-          url: 'data:image/svg+xml,' + encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="#00FF88" stroke-width="2"/><circle cx="8" cy="8" r="2" fill="#00FF88"/></svg>`
-          ),
-          scaledSize: { width: 16, height: 16 },
-          anchor: { x: 8, y: 8 },
-        },
       })
     } catch { /* ignore */ }
 
@@ -108,26 +120,6 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
       targetMarkerRef.current = mapplsGlobal.Marker({
         map: mapInstance,
         position: TARGET,
-        icon: {
-          url: 'data:image/svg+xml,' + encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><polygon points="10,2 18,18 10,14 2,18" fill="none" stroke="#E24B4A" stroke-width="2"/><circle cx="10" cy="10" r="2" fill="#E24B4A"/></svg>`
-          ),
-          scaledSize: { width: 20, height: 20 },
-          anchor: { x: 10, y: 10 },
-        },
-      })
-    } catch { /* ignore */ }
-
-    // LM marker — top-view aircraft silhouette
-    try {
-      markerRef.current = mapplsGlobal.Marker({
-        map: mapInstance,
-        position: ORIGIN,
-        icon: {
-          url: 'data:image/svg+xml,' + encodeURIComponent(makeLmSvg(0)),
-          scaledSize: { width: 64, height: 64 },
-          anchor: { x: 32, y: 32 },
-        },
       })
     } catch { /* ignore */ }
 
@@ -143,6 +135,32 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
     } catch { /* ignore */ }
   }, [mapInstance, mapplsGlobal])
 
+  // Reproject LM position on map move/zoom
+  useEffect(() => {
+    if (!mapInstance) return
+    const reproject = () => {
+      const vals = useTelemetryStore.getState().values
+      const lat = vals.lat; const lon = vals.lon
+      if (!lat || !lon) return
+      const pt = projectToScreen(lat, lon)
+      if (pt) setLmScreen(pt)
+    }
+    try {
+      mapInstance.on('move', reproject)
+      mapInstance.on('zoom', reproject)
+      mapInstance.on('pitch', reproject)
+      mapInstance.on('rotate', reproject)
+    } catch { /* ignore */ }
+    return () => {
+      try {
+        mapInstance.off('move', reproject)
+        mapInstance.off('zoom', reproject)
+        mapInstance.off('pitch', reproject)
+        mapInstance.off('rotate', reproject)
+      } catch { /* ignore */ }
+    }
+  }, [mapInstance, projectToScreen])
+
   // Live position updates
   useEffect(() => {
     if (!mapInstance || !mapplsGlobal) return
@@ -154,18 +172,11 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
 
       const pos = { lat, lng: lon }
       const heading = state.values.psi ?? 0
+      setLmHeading(heading)
 
-      // Update LM marker position and heading rotation
-      if (markerRef.current) {
-        try { markerRef.current.setPosition(pos) } catch { /* ignore */ }
-        try {
-          markerRef.current.setIcon({
-            url: 'data:image/svg+xml,' + encodeURIComponent(makeLmSvg(heading)),
-            scaledSize: { width: 64, height: 64 },
-            anchor: { x: 32, y: 32 },
-          })
-        } catch { /* ignore */ }
-      }
+      // Project to screen for HTML overlay
+      const pt = projectToScreen(lat, lon)
+      if (pt) setLmScreen(pt)
 
       // Append to trail
       const trail = trailRef.current
@@ -185,13 +196,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
           lastCameraUpdate.current = now
           try {
             if (typeof mapInstance.easeTo === 'function') {
-              mapInstance.easeTo({
-                center: pos,
-                bearing: heading,
-                pitch: 50,
-                zoom: 9,
-                duration: 2000,
-              })
+              mapInstance.easeTo({ center: pos, bearing: heading, pitch: 50, zoom: 9, duration: 2000 })
             } else {
               if (typeof mapInstance.setCenter === 'function') mapInstance.setCenter(pos)
               if (typeof mapInstance.setBearing === 'function') mapInstance.setBearing(heading)
@@ -202,9 +207,9 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
     })
 
     return unsub
-  }, [mapInstance, mapplsGlobal, cameraLocked])
+  }, [mapInstance, mapplsGlobal, cameraLocked, projectToScreen])
 
-  // HTML overlay blimp (always visible, positioned via CSS)
+  // Telemetry for blimp overlay
   const values = useTelemetryStore((s) => s.values)
   const phase = PHASE_LABELS[Math.round(values.flt_phase ?? 3)] ?? 'CRUISE'
   const speed = Math.round(values.gs ?? 0)
@@ -213,7 +218,25 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
 
   return (
     <>
-      {/* Info blimp overlay — always visible at top of map */}
+      {/* HTML aircraft icon overlay — positioned via screen projection */}
+      {lmScreen && (
+        <div
+          style={{
+            position: 'absolute',
+            left: lmScreen.x - 32,
+            top: lmScreen.y - 32,
+            width: 64,
+            height: 64,
+            zIndex: 12,
+            pointerEvents: 'none',
+            transform: `rotate(${lmHeading}deg)`,
+            transition: 'left 0.25s linear, top 0.25s linear, transform 0.25s linear',
+          }}
+          dangerouslySetInnerHTML={{ __html: LM_TOP_VIEW_SVG }}
+        />
+      )}
+
+      {/* Info blimp overlay */}
       <div style={{
         position: 'absolute',
         top: 56,
@@ -238,7 +261,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
         <BlimpItem label="DTG" value={`${distKm} km`} />
       </div>
 
-      {/* Camera lock button — top-right, below map controls */}
+      {/* Camera lock button */}
       <button
         onClick={() => {
           setCameraLocked(true)
@@ -247,13 +270,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
           const hdg = useTelemetryStore.getState().values.psi ?? 0
           if (lat && lon) {
             try {
-              mapInstance.easeTo?.({
-                center: { lat, lng: lon },
-                bearing: hdg,
-                pitch: 50,
-                zoom: 9,
-                duration: 1000,
-              })
+              mapInstance.easeTo?.({ center: { lat, lng: lon }, bearing: hdg, pitch: 50, zoom: 9, duration: 1000 })
             } catch { /* ignore */ }
           }
         }}
@@ -273,7 +290,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
           fontWeight: 600,
           letterSpacing: '0.08em',
           cursor: 'pointer',
-          textTransform: 'uppercase',
+          textTransform: 'uppercase' as const,
           backdropFilter: 'blur(8px)',
         }}
       >
@@ -296,23 +313,21 @@ function BlimpSep() {
   return <div style={{ width: '1px', height: '24px', backgroundColor: 'rgba(255,255,255,0.08)', alignSelf: 'center' }} />
 }
 
-// Top-view Shahed-136 silhouette — delta wing loitering munition
-// Rotated to match heading, dark fill with cyan accent (MIL-STD style)
-function makeLmSvg(heading: number): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-    <g transform="rotate(${heading}, 32, 32)">
-      <!-- Shadow for contrast on any map -->
-      <g opacity="0.4" transform="translate(1,1)">
-        <path d="M32,6 L29,18 L14,30 L14,33 L28,28 L27,48 L22,52 L22,55 L32,51 L42,55 L42,52 L37,48 L36,28 L50,33 L50,30 L35,18 Z" fill="#000"/>
-      </g>
-      <!-- Main body -->
-      <path d="M32,6 L29,18 L14,30 L14,33 L28,28 L27,48 L22,52 L22,55 L32,51 L42,55 L42,52 L37,48 L36,28 L50,33 L50,30 L35,18 Z" fill="#1a1a2e" stroke="#00E5FF" stroke-width="1.2"/>
-      <!-- Fuselage center line -->
-      <line x1="32" y1="8" x2="32" y2="50" stroke="#00E5FF" stroke-width="0.6" opacity="0.5"/>
-      <!-- Engine nacelle -->
-      <ellipse cx="32" cy="46" rx="3" ry="4" fill="#111" stroke="#00E5FF" stroke-width="0.5" opacity="0.7"/>
-      <!-- Nose dot -->
-      <circle cx="32" cy="10" r="1.5" fill="#00E5FF"/>
-    </g>
-  </svg>`
-}
+// Static SVG string — Shahed-136 top-view silhouette
+const LM_TOP_VIEW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Shadow -->
+  <g opacity="0.5" transform="translate(1.5,1.5)">
+    <path d="M32,6 L29,18 L14,30 L14,33 L28,28 L27,48 L22,52 L22,55 L32,51 L42,55 L42,52 L37,48 L36,28 L50,33 L50,30 L35,18 Z" fill="#000"/>
+  </g>
+  <!-- Body -->
+  <path d="M32,6 L29,18 L14,30 L14,33 L28,28 L27,48 L22,52 L22,55 L32,51 L42,55 L42,52 L37,48 L36,28 L50,33 L50,30 L35,18 Z" fill="#1a1a2e" stroke="#00E5FF" stroke-width="1.5"/>
+  <!-- Center line -->
+  <line x1="32" y1="8" x2="32" y2="50" stroke="#00E5FF" stroke-width="0.7" opacity="0.4"/>
+  <!-- Engine -->
+  <ellipse cx="32" cy="46" rx="3" ry="4" fill="#111" stroke="#00E5FF" stroke-width="0.6" opacity="0.6"/>
+  <!-- Nose -->
+  <circle cx="32" cy="9" r="2" fill="#00E5FF"/>
+  <!-- Wing tips glow -->
+  <circle cx="14" cy="31" r="2" fill="#00E5FF" opacity="0.3"/>
+  <circle cx="50" cy="31" r="2" fill="#00E5FF" opacity="0.3"/>
+</svg>`
