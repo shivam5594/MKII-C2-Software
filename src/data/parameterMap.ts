@@ -171,7 +171,7 @@ export const STATE_REGISTRY: StateVariableDefinition[] = [
   { id: 'innovation_anomaly_flag', label: 'Innovation Anomaly', type: 'Boolean', category: 'FUSION', description: 'CUSUM-based drift anomaly detection flag' },
 
   // Mission phase & authorization
-  { id: 'mission_phase', label: 'Mission Phase', type: 'Enum', category: 'MISSION', description: 'INIT / CLIMB / TRANSIT / LOITER / TERMINAL / BDA — governs technique priority order' },
+  { id: 'mission_phase', label: 'Mission Phase', type: 'Enum', category: 'MISSION', description: 'INIT / CLIMB / CRUISE / LOITER / TERMINAL / BDA — governs technique priority order' },
   { id: 'distance_to_target_km', label: 'Dist to Target', type: 'Float km', category: 'MISSION', description: 'Range to target; drives terminal phase entry (< 40 km) and CEP tightening' },
   { id: 'cep_threshold_m', label: 'CEP Threshold', type: 'Float m', category: 'MISSION', description: 'Max acceptable CEP per phase — tightens from 200 m (transit) to 5 m (terminal)' },
   { id: 'time_in_denial_s', label: 'GNSS Denial Time', type: 'Float s', category: 'MISSION', description: 'Cumulative GNSS denial duration — informs INS drift budget vs. remaining range' },
