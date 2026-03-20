@@ -97,8 +97,8 @@ export default function TelemetryPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px', minHeight: 0 }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '6px',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '10px',
         }}>
           {categoryParams.map((p) => (
             <TelemetrySparkline
@@ -106,8 +106,7 @@ export default function TelemetryPage() {
               param={p}
               value={values[p.id] ?? p.nominalCruise}
               history={history[p.id] ?? []}
-              width={220}
-              height={40}
+              height={56}
             />
           ))}
         </div>

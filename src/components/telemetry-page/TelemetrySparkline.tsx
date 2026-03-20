@@ -9,7 +9,9 @@ interface Props {
   height?: number
 }
 
-export default function TelemetrySparkline({ param, history, value, width = 200, height = 48 }: Props) {
+export default function TelemetrySparkline({ param, history, value, width, height = 48 }: Props) {
+  // Use a normalized viewBox width; SVG stretches to fill container
+  const vw = width ?? 300
   const { pathD, color, formattedValue } = useMemo(() => {
     const data = history.length > 1 ? history : [value, value]
     const min = param.min
@@ -17,7 +19,7 @@ export default function TelemetrySparkline({ param, history, value, width = 200,
     const range = max - min || 1
 
     const points = data.map((v, i) => {
-      const x = (i / (data.length - 1)) * width
+      const x = (i / (data.length - 1)) * vw
       const y = height - 4 - ((v - min) / range) * (height - 8)
       return `${x},${y}`
     })
@@ -42,7 +44,7 @@ export default function TelemetrySparkline({ param, history, value, width = 200,
     }
 
     return { pathD: d, color: c, formattedValue: fv }
-  }, [history, value, param, width, height])
+  }, [history, value, param, vw, height])
 
   return (
     <div
@@ -71,7 +73,7 @@ export default function TelemetrySparkline({ param, history, value, width = 200,
           )}
         </div>
       </div>
-      <svg width={width} height={height} style={{ display: 'block' }}>
+      <svg viewBox={`0 0 ${vw} ${height}`} preserveAspectRatio="none" style={{ display: 'block', width: '100%', height }}>
         <path d={pathD} fill="none" stroke={color} strokeWidth={1.5} opacity={0.8} />
       </svg>
     </div>
