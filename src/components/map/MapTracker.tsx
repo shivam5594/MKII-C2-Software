@@ -144,6 +144,11 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
       if (!lat || !lon) return
       const pt = projectToScreen(lat, lon)
       if (pt) setLmScreen(pt)
+      // Update icon rotation when map bearing changes (2D/3D switch)
+      const heading = vals.psi ?? 0
+      let mapBearing = 0
+      try { mapBearing = mapInstance.getBearing?.() ?? 0 } catch { /* ignore */ }
+      setLmHeading(heading - mapBearing)
     }
     try {
       mapInstance.on('move', reproject)
@@ -172,7 +177,10 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
 
       const pos = { lat, lng: lon }
       const heading = state.values.psi ?? 0
-      setLmHeading(heading)
+      // Subtract map bearing so icon always points in correct screen direction
+      let mapBearing = 0
+      try { mapBearing = mapInstance.getBearing?.() ?? 0 } catch { /* ignore */ }
+      setLmHeading(heading - mapBearing)
 
       // Project to screen for HTML overlay
       const pt = projectToScreen(lat, lon)

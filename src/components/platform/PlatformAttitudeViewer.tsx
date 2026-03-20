@@ -258,8 +258,12 @@ function ModelWithFallback() {
 function CameraSetup() {
   const { camera } = useThree()
   useEffect(() => {
-    camera.position.set(3, 0.6, 3)
+    camera.position.set(4.5, 1.2, 4.5)
     camera.lookAt(0, -0.1, 0)
+    if ('fov' in camera) {
+      (camera as THREE.PerspectiveCamera).fov = 40;
+      (camera as THREE.PerspectiveCamera).updateProjectionMatrix()
+    }
   }, [camera])
   return null
 }
@@ -283,7 +287,7 @@ export default function PlatformAttitudeViewer() {
         backgroundColor: '#060A12',
       }}>
         <Canvas
-          camera={{ position: [3, 0.6, 3], fov: 32, near: 0.1, far: 50 }}
+          camera={{ position: [4.5, 1.2, 4.5], fov: 40, near: 0.1, far: 50 }}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent' }}
         >
