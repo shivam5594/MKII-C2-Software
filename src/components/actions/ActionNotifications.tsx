@@ -43,25 +43,16 @@ export default function ActionNotifications() {
     .filter(Boolean)
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '12px',
-        right: '12px',
-        zIndex: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        width: '280px',
-        pointerEvents: 'auto',
-      }}
-    >
-      {/* Always-visible expand button */}
+    <>
+      {/* Expand button — top-right, same position as panel close button */}
       <button
         onClick={toggleRight}
         className="flex items-center justify-center gap-1.5 font-mono text-xs tracking-wider uppercase"
         style={{
-          alignSelf: 'flex-end',
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          zIndex: 20,
           padding: '6px 12px',
           borderRadius: '8px',
           border: '1px solid rgba(255,255,255,0.1)',
@@ -69,13 +60,27 @@ export default function ActionNotifications() {
           backdropFilter: 'blur(8px)',
           color: '#8899AA',
           cursor: 'pointer',
+          pointerEvents: 'auto',
         }}
       >
         <PanelRight size={13} />
         AI ACTIONS{actionLog.length > 0 ? ` (${actionLog.length})` : ''}
       </button>
 
-      {/* Toast notifications — auto-dismiss */}
+      {/* Toast notifications — bottom-right, auto-dismiss */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          right: '12px',
+          zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          width: '280px',
+          pointerEvents: 'auto',
+        }}
+      >
       {toastEntries.map((entry, i) => {
         if (!entry) return null
         const color = ACTION_TYPE_COLORS[entry.type] ?? ACTION_TYPE_COLORS.DEFAULT
@@ -121,6 +126,7 @@ export default function ActionNotifications() {
           to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-    </div>
+      </div>
+    </>
   )
 }

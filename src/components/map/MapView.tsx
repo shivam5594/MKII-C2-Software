@@ -117,6 +117,19 @@ export default function MapView() {
     )
   }
 
+  // Resize map when container size changes (e.g. panel collapse/expand)
+  useEffect(() => {
+    if (!containerRef.current || !mapRef.current) return
+    const map = mapRef.current as { resize?: () => void }
+    if (typeof map.resize !== 'function') return
+
+    const ro = new ResizeObserver(() => {
+      map.resize?.()
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [ready]) // re-attach when map becomes ready
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={containerRef} id="mappls-container" style={{ width: '100%', height: '100%' }} />
