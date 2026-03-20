@@ -103,6 +103,11 @@ function CompassRing3D() {
 }
 
 // --- Shared attitude animation hook ---
+// Applies yaw/pitch/roll to the outer group.
+// The model inside must already be oriented with nose toward +Z, top toward +Y.
+// Yaw: rotation around Y (heading, clockwise from +Z = North)
+// Pitch: rotation around X (nose up/down)
+// Roll: rotation around Z (bank)
 function useAttitudeAnimation(groupRef: React.RefObject<THREE.Group | null>) {
   const targetRef = useRef({ pitch: 0, roll: 0, yaw: 0 })
 
@@ -122,7 +127,9 @@ function useAttitudeAnimation(groupRef: React.RefObject<THREE.Group | null>) {
     if (yawDiff < -Math.PI) yawDiff += 2 * Math.PI
     t.yaw += yawDiff * 0.08
 
-    groupRef.current.rotation.set(t.pitch, -t.yaw, -t.roll, 'YXZ')
+    // Apply as: first yaw (heading around Y), then pitch (around X), then roll (around Z)
+    const euler = new THREE.Euler(-t.pitch, -t.yaw, t.roll, 'YXZ')
+    groupRef.current.quaternion.setFromEuler(euler)
   })
 }
 
@@ -158,12 +165,13 @@ function PlatformModel() {
       }
     })
 
-    // Wrap in a pivot to orient nose toward +Z (compass North)
-    // GLB has nose pointing toward -Y, top toward +Z
-    // Rotate -90° around X to bring nose from -Y to +Z, then 180° around Z for correct top-up
+    // Wrap in a pivot to orient model for attitude animation
+    // After this pivot, with yaw=0 the nose should point toward +Z (compass North)
+    // and top of aircraft should face +Y (up)
     const pivot = new THREE.Group()
     pivot.add(clone)
-    pivot.rotation.set(-Math.PI / 2, 0, Math.PI)
+    // Step 1: Bring nose to horizontal plane (from model's native -Y to +Z)
+    pivot.rotation.set(Math.PI / 2, 0, 0)
 
     return pivot
   }, [gltf])
