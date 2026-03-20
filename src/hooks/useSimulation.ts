@@ -134,6 +134,11 @@ export function useSimulation() {
         const telemetryValues = generateTelemetryFrame(simTime, prevTelemetryValues.current, dt)
         prevTelemetryValues.current = telemetryValues
         useTelemetryStore.getState().updateValues(telemetryValues)
+
+        // 8. Check mission complete (POST_MSN phase = target reached)
+        if (Math.round(telemetryValues.flt_phase) === 7 && !useUIStore.getState().missionComplete) {
+          useUIStore.getState().setMissionComplete(true)
+        }
       }
 
       rafRef.current = requestAnimationFrame(tick)

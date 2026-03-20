@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTelemetryStore } from '../../stores/telemetryStore'
+import { useUIStore } from '../../stores/uiStore'
 
 // Mission route
 const ORIGIN = { lat: 26.9167, lng: 70.9000 }  // 26°55'N 70°54'E
@@ -206,15 +207,100 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
 
   // Telemetry for blimp overlay
   const values = useTelemetryStore((s) => s.values)
+  const missionComplete = useUIStore((s) => s.missionComplete)
   const phase = PHASE_LABELS[Math.round(values.flt_phase ?? 3)] ?? 'CRUISE'
   const speed = Math.round(values.gs ?? 0)
   const alt = Math.round(values.alt_msl ?? 2000)
   const distKm = Math.round((values.wpt_dist ?? 0) / 1000)
 
+  const handleResetMission = () => {
+    // Reset mission complete flag
+    useUIStore.getState().setMissionComplete(false)
+    // Reset simulation time and telemetry
+    useUIStore.getState().setSimulationTime(0)
+    useUIStore.getState().setPlaybackSpeed(1)
+    // Clear telemetry to force re-init from nominals
+    useTelemetryStore.getState().updateValues({})
+    // Clear trail
+    trailRef.current = []
+    if (trailPolyRef.current) {
+      try { trailPolyRef.current.setPath([ORIGIN, ORIGIN]) } catch { /* ignore */ }
+    }
+    // Reload page to fully reset simulation state
+    window.location.reload()
+  }
+
   return (
     <>
-      {/* Target crosshair */}
-      {tgtScreen && (
+      {/* Mission complete popup */}
+      {missionComplete && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            backgroundColor: '#0A0E1A',
+            border: '1px solid rgba(0, 229, 255, 0.3)',
+            borderRadius: '12px',
+            padding: '32px 48px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            boxShadow: '0 0 60px rgba(0, 229, 255, 0.15)',
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              backgroundColor: 'rgba(0, 229, 255, 0.1)',
+              border: '2px solid #00E5FF',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '28px',
+            }}>
+              ✓
+            </div>
+            <div className="font-mono" style={{
+              fontSize: '18px', fontWeight: 700, color: '#00E5FF',
+              letterSpacing: '0.15em', textTransform: 'uppercase',
+            }}>
+              CONTACT SUCCESSFUL
+            </div>
+            <div className="font-mono" style={{
+              fontSize: '11px', color: '#8899AA', maxWidth: 280,
+            }}>
+              Target neutralized. All mission objectives complete. BDA sensor activated.
+            </div>
+            <button
+              onClick={handleResetMission}
+              className="font-mono"
+              style={{
+                marginTop: '8px',
+                padding: '10px 32px',
+                borderRadius: '8px',
+                border: '1px solid rgba(0, 229, 255, 0.3)',
+                backgroundColor: 'rgba(0, 229, 255, 0.1)',
+                color: '#00E5FF',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              RESET MISSION
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Target crosshair — hide after contact */}
+      {tgtScreen && !missionComplete && (
         <div
           style={{
             position: 'absolute',
@@ -229,8 +315,8 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
         />
       )}
 
-      {/* HTML aircraft icon overlay — positioned via screen projection */}
-      {lmScreen && (
+      {/* HTML aircraft icon overlay — hide after contact */}
+      {lmScreen && !missionComplete && (
         <img
           src={`${import.meta.env.BASE_URL}lm-icon.svg`}
           alt="LM"

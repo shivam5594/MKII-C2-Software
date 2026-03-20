@@ -56,7 +56,7 @@ export default function TopBar() {
   )
 }
 
-const SPEEDS = [1, 2, 5, 10]
+const SPEEDS = [1, 2, 5, 10, 20, 50]
 
 function SpeedControls() {
   const speed = useUIStore((s) => s.playbackSpeed)

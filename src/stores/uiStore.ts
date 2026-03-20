@@ -34,9 +34,11 @@ interface UIStore {
   rightPanelWidth: number
 
   hudVisible: boolean
+  missionComplete: boolean
   actionLog: ActionLogEntry[]
 
   toggleHud: () => void
+  setMissionComplete: (v: boolean) => void
   setActiveScenario: (scenario: ScenarioData | null) => void
   setPlaying: (playing: boolean) => void
   setPlaybackTime: (time: number) => void
@@ -64,9 +66,11 @@ export const useUIStore = create<UIStore>((set) => ({
   leftPanelWidth: 280,
   rightPanelWidth: 320,
   hudVisible: true,
+  missionComplete: false,
   actionLog: [],
 
   toggleHud: () => set((s) => ({ hudVisible: !s.hudVisible })),
+  setMissionComplete: (v) => set({ missionComplete: v }),
   setActiveScenario: (scenario) => set({ activeScenario: scenario, playbackTime: 0, isPlaying: false }),
   setPlaying: (playing) => set({ isPlaying: playing }),
   setPlaybackTime: (time) => set({ playbackTime: time }),
