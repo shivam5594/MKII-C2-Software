@@ -162,8 +162,10 @@ function PlatformModel() {
   }, [gltf])
 
   return (
-    <group ref={groupRef}>
-      <primitive object={scene} />
+    <group position={[0, 0.5, 0]}>
+      <group ref={groupRef}>
+        <primitive object={scene} />
+      </group>
     </group>
   )
 }
@@ -174,6 +176,7 @@ function FallbackAircraft() {
   useAttitudeAnimation(groupRef)
 
   return (
+    <group position={[0, 0.5, 0]}>
     <group ref={groupRef}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.08, 0.12, 2, 8]} />
@@ -199,6 +202,7 @@ function FallbackAircraft() {
         <boxGeometry args={[2.2, 0.03, 0.6]} />
         <meshBasicMaterial color={CYAN} wireframe transparent opacity={0.2} />
       </mesh>
+    </group>
     </group>
   )
 }
@@ -235,8 +239,8 @@ function ModelWithFallback() {
 function CameraSetup() {
   const { camera } = useThree()
   useEffect(() => {
-    camera.position.set(3, 0.5, 3)
-    camera.lookAt(0, 0.2, 0)
+    camera.position.set(3, 0.8, 3)
+    camera.lookAt(0, 0.3, 0)
   }, [camera])
   return null
 }
@@ -260,7 +264,7 @@ export default function PlatformAttitudeViewer() {
         backgroundColor: '#060A12',
       }}>
         <Canvas
-          camera={{ position: [3, 0.5, 3], fov: 32, near: 0.1, far: 50 }}
+          camera={{ position: [3, 0.8, 3], fov: 32, near: 0.1, far: 50 }}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent' }}
         >
