@@ -92,7 +92,7 @@ export const TELEMETRY_PARAMS: TelemetryParamDef[] = [
 
   // ── GUIDANCE (10) ──
   { id: 'wpt_idx', label: 'Active Waypoint', shortLabel: 'WPT', unit: '', min: 0, max: 99, nominalCruise: 3, category: 'GUIDANCE', format: 'int' },
-  { id: 'wpt_dist', label: 'Dist to Waypoint', shortLabel: 'WDST', unit: 'm', min: 0, max: 100000, nominalCruise: 15000, category: 'GUIDANCE', format: 'int' },
+  { id: 'wpt_dist', label: 'Dist to Waypoint', shortLabel: 'WDST', unit: 'm', min: 0, max: 600000, nominalCruise: 500000, category: 'GUIDANCE', format: 'int' },
   { id: 'wpt_brg', label: 'Bearing to Waypoint', shortLabel: 'WBRG', unit: 'deg', min: 0, max: 360, nominalCruise: 220, category: 'GUIDANCE', format: 'int' },
   { id: 'xte', label: 'Cross-Track Error', shortLabel: 'XTE', unit: 'm', min: -500, max: 500, nominalCruise: 0, category: 'GUIDANCE', format: 'float1', warningHigh: 200, warningLow: -200 },
   { id: 'ttw', label: 'Time to Waypoint', shortLabel: 'TTW', unit: 's', min: 0, max: 36000, nominalCruise: 300, category: 'GUIDANCE', format: 'int' },

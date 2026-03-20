@@ -79,12 +79,8 @@ export function generateTelemetryFrame(
     values.bat_soc = Math.max(0, (prevValues.bat_soc ?? 92) - dt * 0.0008)
   }
 
-  // Waypoint distance decreases
-  if (prevValues) {
-    const prevDist = prevValues.wpt_dist ?? param('wpt_dist').nominalCruise
-    values.wpt_dist = Math.max(100, prevDist - dt * values.gs * 0.514444)
-    values.ttw = values.wpt_dist / (values.gs * 0.514444 + 0.01)
-  }
+  // TTW computed after wpt_dist is set from haversine below
+  // (old linear decrement removed — haversine is source of truth)
 
   // Loiter time remaining decreases
   if (prevValues) {
@@ -133,8 +129,9 @@ export function generateTelemetryFrame(
     values.flt_phase = 7 // POST_MSN
   }
 
-  // Update waypoint distance
+  // Update waypoint distance and time-to-waypoint
   values.wpt_dist = distToTarget * 1000 // meters
+  values.ttw = values.wpt_dist / (values.gs * 0.514444 + 0.01)
 
   // Clamp all values to valid ranges
   for (const p of TELEMETRY_PARAMS) {

@@ -154,7 +154,7 @@ export function defaultFusionState(): FusionState {
 export function defaultMissionState(): MissionState {
   return {
     mission_phase: 'TRANSIT',
-    distance_to_target_km: 250,
+    distance_to_target_km: 500,
     cep_threshold_m: 200,
     time_in_denial_s: 0,
     mitl_auth_status: 'PENDING',
