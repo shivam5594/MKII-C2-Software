@@ -83,7 +83,7 @@ function CompassRing3D() {
           <Text
             key={label}
             position={[-Math.sin(rad) * labelR, 0.01, Math.cos(rad) * labelR]}
-            rotation={[-Math.PI / 2, 0, 0]}
+            rotation={[-Math.PI / 2, Math.PI, 0]}
             fontSize={0.22}
             fontWeight={700}
             color={label === 'N' ? CYAN : '#8899AA'}
