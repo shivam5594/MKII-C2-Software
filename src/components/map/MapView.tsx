@@ -49,7 +49,7 @@ export default function MapView() {
 
     try {
       const map = mapplsGlobal.Map('mappls-container', {
-        center: { lat: 26.8882, lng: 70.9150 }, // Jaisalmer AF Station
+        center: { lat: 26.9167, lng: 70.9000 }, // Launch point
         zoom: 7,
         zoomControl: true,
         traffic: false,

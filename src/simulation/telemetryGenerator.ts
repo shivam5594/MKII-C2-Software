@@ -36,8 +36,8 @@ export function generateTelemetryFrame(
   }
 
   // --- Mission route: Jaisalmer AF Station → Muridke, Pakistan ---
-  const TGT_LAT = 31.802
-  const TGT_LON = 74.255
+  const TGT_LAT = 24.8359
+  const TGT_LON = 66.9832
   const curLat = prevValues?.lat ?? param('lat').nominalCruise
   const curLon = prevValues?.lon ?? param('lon').nominalCruise
 

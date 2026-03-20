@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTelemetryStore } from '../../stores/telemetryStore'
 
 // Mission route
-const ORIGIN = { lat: 26.8882, lng: 70.9150 }  // Jaisalmer AF Station
-const TARGET = { lat: 31.802, lng: 74.255 }     // Muridke, Pakistan
+const ORIGIN = { lat: 26.9167, lng: 70.9000 }  // 26°55'N 70°54'E
+const TARGET = { lat: 24.8359, lng: 66.9832 }   // Target location
 
 function generatePlannedRoute(steps = 100): { lat: number; lng: number }[] {
   const pts: { lat: number; lng: number }[] = []
