@@ -34,7 +34,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
   const initDoneRef = useRef(false)
   const lastCameraUpdate = useRef(0)
   const [cameraLocked, setCameraLocked] = useState(true)
-  const lockGuardRef = useRef(0) // timestamp when lock was engaged — ignore unlocks for 3s after
+  const isAnimatingRef = useRef(false) // true during programmatic easeTo — ignore unlock events
 
   // Screen positions for HTML overlays
   const [lmScreen, setLmScreen] = useState<{ x: number; y: number } | null>(null)
@@ -66,8 +66,8 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
   useEffect(() => {
     if (!mapInstance) return
     const unlock = () => {
-      // Ignore unlocks within 3s of locking (easeTo triggers map events)
-      if (Date.now() - lockGuardRef.current < 3000) return
+      // Ignore unlocks caused by programmatic easeTo animations
+      if (isAnimatingRef.current) return
       setCameraLocked(false)
     }
     try {
@@ -195,6 +195,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
         const now = Date.now()
         if (now - lastCameraUpdate.current > 2000) {
           lastCameraUpdate.current = now
+          isAnimatingRef.current = true
           try {
             if (typeof mapInstance.easeTo === 'function') {
               mapInstance.easeTo({ center: pos, bearing: heading, pitch: 50, zoom: 9, duration: 2000 })
@@ -203,6 +204,8 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
               if (typeof mapInstance.setBearing === 'function') mapInstance.setBearing(heading)
             }
           } catch { /* ignore */ }
+          // Clear animation flag after easeTo completes
+          setTimeout(() => { isAnimatingRef.current = false }, 2200)
         }
       }
     })
@@ -367,7 +370,7 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
       {/* Camera lock button */}
       <button
         onClick={() => {
-          lockGuardRef.current = Date.now()
+          isAnimatingRef.current = true
           setCameraLocked(true)
           const lat = useTelemetryStore.getState().values.lat
           const lon = useTelemetryStore.getState().values.lon
@@ -376,6 +379,9 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
             try {
               mapInstance.easeTo?.({ center: { lat, lng: lon }, bearing: hdg, pitch: 50, zoom: 9, duration: 1000 })
             } catch { /* ignore */ }
+            setTimeout(() => { isAnimatingRef.current = false }, 1200)
+          } else {
+            isAnimatingRef.current = false
           }
         }}
         className="font-mono"
