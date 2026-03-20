@@ -4,7 +4,7 @@ import FusionSummaryCard from './FusionSummaryCard'
 import TechniqueCard from './TechniqueCard'
 import MissionStateCard from './MissionStateCard'
 import EnvironmentStateCard from './EnvironmentStateCard'
-import ScenarioPicker from '../actions/ScenarioPicker'
+import FaultInjector from '../actions/FaultInjector'
 
 export default function SensorPanel() {
   useSparklineBuffer()
@@ -56,16 +56,16 @@ export default function SensorPanel() {
       {/* Divider */}
       <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 12px' }} />
 
-      {/* Scenarios — pinned at bottom */}
+      {/* Fault Injection — pinned at bottom */}
       <div style={{ padding: '8px 12px 12px', flexShrink: 0 }}>
         <div
           className="font-mono text-xs tracking-[0.15em] uppercase font-medium"
           style={{ color: '#8899AA', marginBottom: '8px' }}
         >
-          SCENARIOS
+          FAULT INJECTION
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <ScenarioPicker />
+          <FaultInjector />
         </div>
       </div>
     </div>

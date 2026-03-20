@@ -1,28 +1,25 @@
 import { useNavigationStore } from '../../stores/navigationStore'
-import { useUIStore } from '../../stores/uiStore'
 
 export default function EWStatusStrip() {
   const parameters = useNavigationStore((s) => s.parameters)
-  const activeScenario = useUIStore((s) => s.activeScenario)
 
   const jamPower = parameters['ew_jam_power']?.confidence ?? 0.95
   const spoofConf = parameters['ew_spoof_conf']?.confidence ?? 0.95
 
   const jamming = jamPower < 0.5
   const spoofing = spoofConf < 0.5
-  const scenarioId = activeScenario?.id
 
   let threatLevel = 'CLEAR'
   let threatColor = '#00E5FF'
-  if (scenarioId === 'spoof-attack' && spoofing) {
+  if (jamming && spoofing) {
+    threatLevel = 'MULTI-THREAT'
+    threatColor = '#E24B4A'
+  } else if (spoofing) {
     threatLevel = 'SPOOF DETECTED'
     threatColor = '#E24B4A'
-  } else if (scenarioId === 'gnss-jam' && jamming) {
+  } else if (jamming) {
     threatLevel = 'JAMMING'
     threatColor = '#FF6B35'
-  } else if (jamming || spoofing) {
-    threatLevel = 'CAUTION'
-    threatColor = '#FFB800'
   }
 
   return (

@@ -54,6 +54,14 @@ body {
   color: var(--cyan-100);
 }
 
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
 /* Status LED blink */
 @keyframes blink {
   0%, 100% { opacity: 1; }

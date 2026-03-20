@@ -4,31 +4,30 @@ import TopBar from './TopBar'
 import BottomBar from './BottomBar'
 import LeftPanel from './LeftPanel'
 import RightPanel from './RightPanel'
+import ActionNotifications from '../actions/ActionNotifications'
 import ResizeHandle from '../common/ResizeHandle'
 import SphereViewport from '../spheres/SphereViewport'
 import MapView from '../map/MapView'
+import TelemetryPage from '../telemetry-page/TelemetryPage'
+import HudOverlay from '../hud/HudOverlay'
 import { useUIStore } from '../../stores/uiStore'
 import { useSimulation } from '../../hooks/useSimulation'
-import { useScenario } from '../../hooks/useScenario'
+import { useFaultStore } from '../../stores/faultStore'
 import type { ViewportMode } from '../../stores/uiStore'
 
 function CenterViewport() {
   const mode = useUIStore((s) => s.viewportMode)
 
-  if (mode === 'MAP') return <MapView />
   if (mode === 'SPHERES') return <SphereViewport />
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <SphereViewport />
-      </div>
-      <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.06)' }} />
-      <div style={{ height: '35%', minHeight: 0 }}>
-        <MapView />
-      </div>
+  if (mode === 'MAP') return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <MapView />
+      <HudOverlay />
     </div>
   )
+  if (mode === 'TELEMETRY') return <TelemetryPage />
+
+  return <SphereViewport />
 }
 
 function ViewportTabs() {
@@ -36,9 +35,9 @@ function ViewportTabs() {
   const setMode = useUIStore((s) => s.setViewportMode)
 
   const tabs: { key: ViewportMode; label: string; shortcut: string }[] = [
-    { key: 'MAP', label: 'MAP', shortcut: '1' },
-    { key: 'SPHERES', label: 'SPHERES', shortcut: '2' },
-    { key: 'SPLIT', label: 'SPLIT', shortcut: '3' },
+    { key: 'SPHERES', label: 'SPHERES', shortcut: '1' },
+    { key: 'MAP', label: 'MAP', shortcut: '2' },
+    { key: 'TELEMETRY', label: 'TELEMETRY', shortcut: '3' },
   ]
 
   return (
@@ -71,12 +70,10 @@ function ViewportTabs() {
 export default function Shell() {
   useSimulation()
 
-  const { load } = useScenario()
   const setMode = useUIStore((s) => s.setViewportMode)
   const toggleLeft = useUIStore((s) => s.toggleLeftPanel)
   const toggleRight = useUIStore((s) => s.toggleRightPanel)
-  const togglePlayback = useUIStore((s) => s.togglePlayback)
-  const setPlaybackTime = useUIStore((s) => s.setPlaybackTime)
+  const toggleHud = useUIStore((s) => s.toggleHud)
   const leftOpen = useUIStore((s) => s.leftPanelOpen)
   const rightOpen = useUIStore((s) => s.rightPanelOpen)
   const setLeftWidth = useUIStore((s) => s.setLeftPanelWidth)
@@ -96,36 +93,35 @@ export default function Shell() {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
 
+      const faults = useFaultStore.getState()
+      const simTime = performance.now() / 1000
+
       switch (e.key) {
-        case '1': setMode('MAP'); break
-        case '2': setMode('SPHERES'); break
-        case '3': setMode('SPLIT'); break
+        case '1': setMode('SPHERES'); break
+        case '2': setMode('MAP'); break
+        case '3': setMode('TELEMETRY'); break
         case '[': toggleLeft(); break
         case ']': toggleRight(); break
-        case ' ':
-          e.preventDefault()
-          togglePlayback()
+        case 'j': case 'J':
+          if (faults.jamming) faults.clearJamming()
+          else faults.injectJamming(simTime)
           break
-        case 'ArrowLeft': {
-          const t = useUIStore.getState().playbackTime
-          setPlaybackTime(Math.max(0, t - 2))
+        case 'k': case 'K':
+          if (faults.spoofing) faults.clearSpoofing()
+          else faults.injectSpoofing(simTime)
           break
-        }
-        case 'ArrowRight': {
-          const t = useUIStore.getState().playbackTime
-          const dur = useUIStore.getState().activeScenario?.duration_seconds ?? 60
-          setPlaybackTime(Math.min(dur, t + 2))
+        case 'h': case 'H':
+          toggleHud()
           break
-        }
-        case 'n': case 'N': load('nominal'); break
-        case 'j': case 'J': load('gnss-jam'); break
-        case 's': case 'S': load('spoof-attack'); break
+        case 'Escape':
+          faults.clearAll()
+          break
       }
     }
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [setMode, toggleLeft, toggleRight, togglePlayback, setPlaybackTime, load])
+  }, [setMode, toggleLeft, toggleRight, toggleHud])
 
   return (
     <div style={{
@@ -137,14 +133,10 @@ export default function Shell() {
       padding: '8px',
       gap: '6px',
     }}>
-      {/* Classification bar — thin amber strip, respects outer padding */}
       <ClassificationBar />
-
-      {/* Top bar — rounded */}
       <TopBar />
 
-      {/* Main content row: left | resize | center | resize | right */}
-      <div style={{ flex: 1, display: 'flex', minHeight: 0, gap: '6px' }}>
+      <div style={{ flex: 1, display: 'flex', minHeight: 0, gap: '6px', position: 'relative' }}>
         {leftOpen && (
           <>
             <LeftPanel />
@@ -152,10 +144,11 @@ export default function Shell() {
           </>
         )}
 
-        {/* Center viewport — rounded */}
         <div style={{ flex: 1, minWidth: 0, position: 'relative', borderRadius: '10px', overflow: 'hidden' }}>
           <ViewportTabs />
           <CenterViewport />
+          {/* Stacked notifications when right panel is collapsed */}
+          {!rightOpen && <ActionNotifications />}
         </div>
 
         {rightOpen && (
@@ -166,7 +159,6 @@ export default function Shell() {
         )}
       </div>
 
-      {/* Bottom bar — rounded */}
       <BottomBar />
     </div>
   )

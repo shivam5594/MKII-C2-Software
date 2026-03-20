@@ -1,14 +1,13 @@
 import { useUIStore } from '../../stores/uiStore'
 
 export default function MissionClock() {
-  const playbackTime = useUIStore((s) => s.playbackTime)
-  const isPlaying = useUIStore((s) => s.isPlaying)
+  const simulationTime = useUIStore((s) => s.simulationTime)
 
-  const totalSeconds = Math.floor(playbackTime)
+  const totalSeconds = Math.floor(simulationTime)
   const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
   const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
   const seconds = String(totalSeconds % 60).padStart(2, '0')
-  const ms = String(Math.floor((playbackTime % 1) * 100)).padStart(2, '0')
+  const ms = String(Math.floor((simulationTime % 1) * 100)).padStart(2, '0')
 
   return (
     <div className="flex items-center gap-2">
@@ -17,7 +16,7 @@ export default function MissionClock() {
       </span>
       <span
         className="font-mono text-base tabular-nums"
-        style={{ color: isPlaying ? '#00E5FF' : '#8899AA' }}
+        style={{ color: '#00E5FF' }}
       >
         {hours}:{minutes}:{seconds}.{ms}
       </span>

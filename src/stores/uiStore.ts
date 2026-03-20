@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { ScenarioData } from '../data/scenarioEngine'
 
-export type ViewportMode = 'MAP' | 'SPHERES' | 'SPLIT'
+export type ViewportMode = 'SPHERES' | 'MAP' | 'TELEMETRY'
 
 export interface ActionLogEntry {
   id: string
@@ -25,6 +25,7 @@ interface UIStore {
   isPlaying: boolean
   playbackTime: number
   playbackSpeed: number
+  simulationTime: number
 
   viewportMode: ViewportMode
   leftPanelOpen: boolean
@@ -32,12 +33,15 @@ interface UIStore {
   leftPanelWidth: number
   rightPanelWidth: number
 
+  hudVisible: boolean
   actionLog: ActionLogEntry[]
 
+  toggleHud: () => void
   setActiveScenario: (scenario: ScenarioData | null) => void
   setPlaying: (playing: boolean) => void
   setPlaybackTime: (time: number) => void
   setPlaybackSpeed: (speed: number) => void
+  setSimulationTime: (time: number) => void
   togglePlayback: () => void
   setViewportMode: (mode: ViewportMode) => void
   toggleLeftPanel: () => void
@@ -53,17 +57,21 @@ export const useUIStore = create<UIStore>((set) => ({
   isPlaying: false,
   playbackTime: 0,
   playbackSpeed: 1,
+  simulationTime: 0,
   viewportMode: 'SPHERES',
   leftPanelOpen: true,
   rightPanelOpen: true,
   leftPanelWidth: 280,
   rightPanelWidth: 320,
+  hudVisible: true,
   actionLog: [],
 
+  toggleHud: () => set((s) => ({ hudVisible: !s.hudVisible })),
   setActiveScenario: (scenario) => set({ activeScenario: scenario, playbackTime: 0, isPlaying: false }),
   setPlaying: (playing) => set({ isPlaying: playing }),
   setPlaybackTime: (time) => set({ playbackTime: time }),
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
+  setSimulationTime: (time) => set({ simulationTime: time }),
   togglePlayback: () => set((s) => ({ isPlaying: !s.isPlaying })),
   setViewportMode: (mode) => set({ viewportMode: mode }),
   toggleLeftPanel: () => set((s) => ({ leftPanelOpen: !s.leftPanelOpen })),

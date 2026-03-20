@@ -1,9 +1,11 @@
 import EWStatusStrip from '../telemetry/EWStatusStrip'
-import TimelineScrubber from '../spheres/TimelineScrubber'
-import { useUIStore } from '../../stores/uiStore'
+import { useFaultStore } from '../../stores/faultStore'
+import { useNavigationStore } from '../../stores/navigationStore'
 
 export default function BottomBar() {
-  const activeScenario = useUIStore((s) => s.activeScenario)
+  const jamming = useFaultStore((s) => s.jamming)
+  const spoofing = useFaultStore((s) => s.spoofing)
+  const missionPhase = useNavigationStore((s) => s.mission.mission_phase)
 
   return (
     <div
@@ -17,18 +19,41 @@ export default function BottomBar() {
         flexShrink: 0,
       }}
     >
-      {activeScenario ? (
-        <div style={{ flex: 1 }}>
-          <TimelineScrubber />
-        </div>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <EWStatusStrip />
-          <span className="font-mono text-xs tracking-wider" style={{ color: '#5A6A82' }}>
-            PHASE: STANDBY
-          </span>
+
+          {/* Active fault badges */}
+          {jamming && (
+            <span
+              className="font-mono text-xs tracking-wider uppercase font-medium px-2 py-0.5 rounded"
+              style={{
+                color: '#FFB800',
+                backgroundColor: 'rgba(255, 184, 0, 0.1)',
+                border: '1px solid rgba(255, 184, 0, 0.3)',
+              }}
+            >
+              JAM ACTIVE
+            </span>
+          )}
+          {spoofing && (
+            <span
+              className="font-mono text-xs tracking-wider uppercase font-medium px-2 py-0.5 rounded"
+              style={{
+                color: '#E24B4A',
+                backgroundColor: 'rgba(226, 75, 74, 0.1)',
+                border: '1px solid rgba(226, 75, 74, 0.3)',
+              }}
+            >
+              SPOOF ACTIVE
+            </span>
+          )}
         </div>
-      )}
+
+        <span className="font-mono text-xs tracking-wider" style={{ color: '#5A6A82' }}>
+          PHASE: {missionPhase}
+        </span>
+      </div>
     </div>
   )
 }

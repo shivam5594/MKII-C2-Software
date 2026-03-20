@@ -1,15 +1,15 @@
 import Logo from '../common/Logo'
 import MissionClock from '../telemetry/MissionClock'
 import StatusLED from '../common/StatusLED'
-import { useUIStore } from '../../stores/uiStore'
+import { useFaultStore } from '../../stores/faultStore'
+import { useNavigationStore } from '../../stores/navigationStore'
 
 export default function TopBar() {
-  const isPlaying = useUIStore((s) => s.isPlaying)
-  const activeScenario = useUIStore((s) => s.activeScenario)
-
-  const scenarioId = activeScenario?.id
-  const hasJamming = scenarioId === 'gnss-jam'
-  const hasSpoofing = scenarioId === 'spoof-attack'
+  const jamming = useFaultStore((s) => s.jamming)
+  const spoofing = useFaultStore((s) => s.spoofing)
+  const gnssHealth = useNavigationStore((s) => s.techniques.GNSS.health_status)
+  const ewJam = useNavigationStore((s) => s.parameters['ew_jam_power']?.confidence ?? 1)
+  const commsSat = useNavigationStore((s) => s.parameters['comms_satcom']?.confidence ?? 1)
 
   return (
     <div
@@ -40,13 +40,13 @@ export default function TopBar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <StatusLED status="nominal" label="INS" />
         <StatusLED
-          status={isPlaying && (hasJamming || hasSpoofing) ? 'critical' : 'nominal'}
+          status={gnssHealth === 'DENIED' || gnssHealth === 'SPOOFED' ? 'critical' : gnssHealth === 'DEGRADED' ? 'caution' : 'nominal'}
           label="GNSS"
-          blink={isPlaying && (hasJamming || hasSpoofing)}
+          blink={jamming || spoofing}
         />
         <StatusLED status="nominal" label="NAV" />
-        <StatusLED status={isPlaying && hasSpoofing ? 'caution' : 'nominal'} label="EW" />
-        <StatusLED status="nominal" label="COMMS" />
+        <StatusLED status={ewJam < 0.5 ? 'caution' : 'nominal'} label="EW" />
+        <StatusLED status={commsSat < 0.5 ? 'caution' : 'nominal'} label="COMMS" />
       </div>
     </div>
   )

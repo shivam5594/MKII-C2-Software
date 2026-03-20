@@ -1,106 +1,153 @@
 import { useEffect, useRef } from 'react'
-import { interpolateAtTime } from '../data/scenarioEngine'
-import { useUIStore } from '../stores/uiStore'
 import { useNavigationStore } from '../stores/navigationStore'
+import { useFaultStore } from '../stores/faultStore'
+import { useUIStore } from '../stores/uiStore'
 import type { ParameterState } from '../stores/navigationStore'
 import type { ActionLogEntry } from '../stores/uiStore'
 import { deriveTechniqueStates, deriveFusionState } from '../data/parameterMap'
+import { computeAllThreatUpdates } from '../simulation/faultInjectionEngine'
+import { computeResponseUpdates } from '../simulation/aiResponseModel'
+import { deriveEnvironmentUpdates, deriveMissionUpdates } from '../simulation/environmentModel'
+import { generateTelemetryFrame } from '../simulation/telemetryGenerator'
+import { useTelemetryStore } from '../stores/telemetryStore'
 
-// Predefined action triggers based on scenario + time thresholds
-interface ActionTrigger {
-  scenarioId: string
-  time: number
-  type: string
-  title: string
-  detail: string
+// ── State-transition action triggers ──
+
+interface TransitionState {
+  gnssJamming: boolean
+  gnssDenied: boolean
+  spoofDetected: boolean
+  multiSourceActive: boolean
 }
 
-const ACTION_TRIGGERS: ActionTrigger[] = [
-  // GNSS Jamming scenario
-  { scenarioId: 'gnss-jam', time: 8, type: 'ALERT', title: 'GNSS DEGRADATION', detail: 'L1/L5 SNR below threshold — jamming suspected' },
-  { scenarioId: 'gnss-jam', time: 12, type: 'NAV_SWITCH', title: 'ANTI-JAM ACTIVE', detail: 'CRPA null steering engaged toward bearing 247°' },
-  { scenarioId: 'gnss-jam', time: 15, type: 'NAV_SWITCH', title: 'NAV SOURCE SWITCH', detail: 'GNSS → TERCOM/TAN — confidence 0.65' },
-  { scenarioId: 'gnss-jam', time: 20, type: 'FUSION', title: 'MAGNAV ACTIVATED', detail: 'Magnetic anomaly correlation online — CEP 450m' },
-  { scenarioId: 'gnss-jam', time: 25, type: 'FUSION', title: 'MULTI-SOURCE FUSION', detail: 'TERCOM + MagNav + Scene Match — fusion confidence 0.85' },
-  { scenarioId: 'gnss-jam', time: 35, type: 'FUSION', title: 'GPS-DENIED STABLE', detail: 'Navigation stable without GNSS — CEP 52m' },
+function detectTransitionState(
+  params: Record<string, ParameterState>,
+  fusionActiveCount: number,
+): TransitionState {
+  const jamPower = params['ew_jam_power']?.confidence ?? 1
+  const spoofConf = params['ew_spoof_conf']?.confidence ?? 1
+  const gnssConf = params['gnss_l1_snr']?.confidence ?? 1
 
-  // Spoofing scenario
-  { scenarioId: 'spoof-attack', time: 5, type: 'ALERT', title: 'GNSS ANOMALY', detail: 'Signal strength exceeds expected — monitoring' },
-  { scenarioId: 'spoof-attack', time: 10, type: 'ALERT', title: 'INERTIAL DELTA GROWING', detail: 'GNSS-INS position delta: 45m and increasing' },
-  { scenarioId: 'spoof-attack', time: 14, type: 'SPOOF_DETECT', title: 'SPOOFING DETECTED', detail: 'Inertial cross-check FAIL — GNSS integrity compromised' },
-  { scenarioId: 'spoof-attack', time: 16, type: 'NAV_SWITCH', title: 'GNSS REJECTED', detail: 'Spoofed GNSS solution rejected — fallback to INS+TERCOM' },
-  { scenarioId: 'spoof-attack', time: 20, type: 'FUSION', title: 'TERCOM ACTIVATED', detail: 'Terrain correlation nav online — confidence 0.55' },
-  { scenarioId: 'spoof-attack', time: 30, type: 'FUSION', title: 'NAV RECOVERED', detail: 'Multi-source fusion stable — CEP 65m without GNSS' },
-]
+  return {
+    gnssJamming: jamPower < 0.5,
+    gnssDenied: gnssConf < 0.35,
+    spoofDetected: spoofConf < 0.5,
+    multiSourceActive: fusionActiveCount >= 3,
+  }
+}
 
 export function useSimulation() {
   const rafRef = useRef<number>(0)
   const lastTimeRef = useRef<number>(0)
-  const firedActionsRef = useRef<Set<string>>(new Set())
+  const simTimeRef = useRef<number>(0)
+  const prevStateRef = useRef<TransitionState>({
+    gnssJamming: false,
+    gnssDenied: false,
+    spoofDetected: false,
+    multiSourceActive: false,
+  })
+  const startedRef = useRef(false)
+  const lastTelemetryRef = useRef<number>(0)
+  const prevTelemetryValues = useRef<Record<string, number> | null>(null)
 
   useEffect(() => {
     const tick = (timestamp: number) => {
-      const dt = lastTimeRef.current ? (timestamp - lastTimeRef.current) / 1000 : 0
+      const dt = lastTimeRef.current ? Math.min((timestamp - lastTimeRef.current) / 1000, 0.1) : 0
       lastTimeRef.current = timestamp
+      simTimeRef.current += dt
 
-      const { activeScenario, isPlaying, playbackTime, playbackSpeed, setPlaybackTime, addAction } =
-        useUIStore.getState()
+      const simTime = simTimeRef.current
+      useUIStore.getState().setSimulationTime(simTime)
+      const faults = useFaultStore.getState()
+      const navStore = useNavigationStore.getState()
 
-      if (activeScenario && isPlaying) {
-        const newTime = playbackTime + dt * playbackSpeed
-        const duration = activeScenario.duration_seconds
+      // 1. Compute threat parameter targets and apply exponential approach
+      const threatUpdates = computeAllThreatUpdates(navStore.parameters, faults, simTime, dt)
+      const batchUpdates: Record<string, Partial<ParameterState>> = {}
+      for (const [id, confidence] of Object.entries(threatUpdates)) {
+        batchUpdates[id] = { confidence }
+      }
+      navStore.batchUpdate(batchUpdates)
 
-        if (newTime >= duration) {
-          setPlaybackTime(0)
-          firedActionsRef.current.clear()
-        } else {
-          setPlaybackTime(newTime)
-        }
+      // 2. Derive technique and fusion state from updated params
+      const updatedParams = useNavigationStore.getState().parameters
+      const techniqueStates = deriveTechniqueStates(updatedParams)
+      const fusionState = deriveFusionState(techniqueStates)
+      navStore.setAllTechniques(techniqueStates)
+      navStore.setFusion(fusionState)
 
-        const clampedTime = Math.min(newTime, duration)
-        const state = interpolateAtTime(activeScenario, clampedTime)
-        const updates: Record<string, Partial<ParameterState>> = {}
+      // 3. Compute AI response parameters
+      const responseUpdates = computeResponseUpdates(
+        updatedParams, faults, techniqueStates, fusionState, dt,
+      )
+      const responseBatch: Record<string, Partial<ParameterState>> = {}
+      for (const [id, confidence] of Object.entries(responseUpdates)) {
+        responseBatch[id] = { confidence }
+      }
+      navStore.batchUpdate(responseBatch)
 
-        for (const [id, confidence] of Object.entries(state.threat)) {
-          updates[id] = { confidence }
-        }
-        for (const [id, confidence] of Object.entries(state.response)) {
-          updates[id] = { confidence }
-        }
+      // 4. Update environment state
+      const envUpdates = deriveEnvironmentUpdates(navStore.environment, faults, dt)
+      navStore.setEnvironment(envUpdates)
 
-        const navStore = useNavigationStore.getState()
-        navStore.batchUpdate(updates)
+      // 5. Update mission state
+      const gnssConfidence = techniqueStates.GNSS.confidence_score
+      const missionUpdates = deriveMissionUpdates(
+        navStore.mission, faults, dt, gnssConfidence,
+        fusionState.composite_confidence, fusionState.active_technique_count,
+      )
+      navStore.setMission(missionUpdates)
 
-        // Derive technique-level and fusion state from updated sensor params
-        const updatedParams = useNavigationStore.getState().parameters
-        const techniqueStates = deriveTechniqueStates(updatedParams)
-        const fusionState = deriveFusionState(techniqueStates)
-        navStore.setAllTechniques(techniqueStates)
-        navStore.setFusion(fusionState)
+      // 6. Fire state-transition actions
+      const currentState = detectTransitionState(
+        useNavigationStore.getState().parameters,
+        fusionState.active_technique_count,
+      )
+      const prev = prevStateRef.current
+      const { addAction } = useUIStore.getState()
 
-        // Fire action triggers
-        for (const trigger of ACTION_TRIGGERS) {
-          if (trigger.scenarioId !== activeScenario.id) continue
-          const key = `${trigger.scenarioId}_${trigger.time}`
-          if (clampedTime >= trigger.time && !firedActionsRef.current.has(key)) {
-            firedActionsRef.current.add(key)
-            const entry: ActionLogEntry = {
-              id: key + '_' + Date.now(),
-              timestamp: trigger.time,
-              type: trigger.type,
-              title: trigger.title,
-              detail: trigger.detail,
-              status: 'AUTO',
-            }
-            addAction(entry)
-          }
-        }
+      if (currentState.gnssJamming && !prev.gnssJamming) {
+        addAction(makeAction('ALERT', 'GNSS DEGRADATION', 'L1/L5 SNR below threshold — jamming suspected', simTime))
+      }
+      if (currentState.gnssDenied && !prev.gnssDenied) {
+        addAction(makeAction('NAV_SWITCH', 'NAV SOURCE SWITCH', 'GNSS → TERCOM/TAN — confidence below threshold', simTime))
+      }
+      if (currentState.spoofDetected && !prev.spoofDetected) {
+        addAction(makeAction('SPOOF_DETECT', 'SPOOFING DETECTED', 'Inertial cross-check FAIL — GNSS integrity compromised', simTime))
+      }
+      if (currentState.multiSourceActive && !prev.multiSourceActive && (faults.jamming || faults.spoofing)) {
+        addAction(makeAction('FUSION', 'MULTI-SOURCE FUSION', 'TERCOM + MagNav + Scene Match — GPS-denied fusion active', simTime))
+      }
+      if (!currentState.gnssDenied && prev.gnssDenied && !faults.jamming && !faults.spoofing) {
+        addAction(makeAction('FUSION', 'GNSS RECOVERED', 'GNSS signal restored — resuming multi-constellation fix', simTime))
+      }
+
+      prevStateRef.current = currentState
+
+      // 7. Generate telemetry data (throttled to ~4Hz to avoid store churn)
+      if (simTime - lastTelemetryRef.current >= 0.25) {
+        lastTelemetryRef.current = simTime
+        const telemetryValues = generateTelemetryFrame(simTime, prevTelemetryValues.current, dt)
+        prevTelemetryValues.current = telemetryValues
+        useTelemetryStore.getState().updateValues(telemetryValues)
       }
 
       rafRef.current = requestAnimationFrame(tick)
     }
 
     rafRef.current = requestAnimationFrame(tick)
+    startedRef.current = true
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
+}
+
+function makeAction(type: string, title: string, detail: string, simTime: number): ActionLogEntry {
+  return {
+    id: `${type}_${Date.now()}`,
+    timestamp: simTime,
+    type,
+    title,
+    detail,
+    status: 'AUTO',
+  }
 }
