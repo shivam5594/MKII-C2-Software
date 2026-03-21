@@ -229,8 +229,6 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
   // Telemetry for blimp overlay
   const values = useTelemetryStore((s) => s.values)
   const missionComplete = useUIStore((s) => s.missionComplete)
-  const missionFlow = useUIStore((s) => s.missionFlow)
-  const isLanded = missionFlow === 'LANDED'
   const phase = PHASE_LABELS[Math.round(values.flt_phase ?? 3)] ?? 'CRUISE'
   const speed = Math.round(values.gs ?? 0)
   const alt = Math.round(values.alt_msl ?? 2000)
