@@ -28,25 +28,17 @@ const ORIGIN_LON = 70.9000
 // ── Physical constants ──
 const KT_TO_MS = 0.514444          // knots → m/s
 const G = 9.81                      // gravitational acceleration m/s²
-const EARTH_RADIUS_KM = 6371
 const DEG_PER_KM = 1 / 111.32      // approx degrees latitude per km
 
 // ── Flight envelope (Shahed-136 class LM) ──
 const MAX_BANK_DEG = 20             // max coordinated bank angle
-const CRUISE_ALT_M = 2000           // standard cruise altitude
 const CRUISE_IAS_KT = 95            // cruise indicated airspeed
 const TERRAIN_ELEV_M = 220          // average terrain elevation in AO
-const FUEL_CAPACITY_KG = 18         // full fuel load
-
 // ── Loiter parameters ──
 const LOITER_RADIUS_KM = 2.5        // orbit radius around target
 const LOITER_LEAD_ANGLE_DEG = 20    // pursuit-point lead angle on orbit
-const LOITER_IAS_KT = 90            // reduced speed for loiter efficiency
-
 // ── Engagement parameters ──
-const ENGAGE_IP_BUFFER_M = 1000     // extra horizontal distance beyond geometric dive start
 const ENGAGE_HEADING_TOL_DEG = 10   // heading alignment tolerance for inbound commit
-const ENGAGE_IP_ARRIVAL_KM = 0.8    // within this distance of IP = arrived
 const RTH_LANDING_DIST_KM = 2       // distance from origin to trigger landing
 const IMPACT_ALT_M = 5              // altitude threshold for impact detection
 
@@ -54,7 +46,6 @@ const IMPACT_ALT_M = 5              // altitude threshold for impact detection
 const PHASE_PRELAUNCH_END_S = 3
 const PHASE_LAUNCH_END_S = 12
 const PHASE_CLIMB_END_S = 45
-const LOITER_ENTRY_DIST_KM = 5      // auto-enter loiter within this distance
 
 /**
  * Generate physically-coupled telemetry with fault awareness.

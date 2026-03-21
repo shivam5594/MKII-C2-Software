@@ -234,11 +234,6 @@ export default function MapTracker({ mapInstance }: MapTrackerProps) {
   const alt = Math.round(values.alt_msl ?? 2000)
   const distKm = Math.round((values.wpt_dist ?? 0) / 1000)
 
-  const handleResetMission = () => {
-    window.location.reload()
-  }
-
-
   return (
     <>
       {/* Mission complete popup */}
