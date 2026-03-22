@@ -59,40 +59,51 @@ export function getThreatConfidences(storeParams: Record<string, ParameterState>
 }
 
 /**
- * RESPONSE sphere: compute per-axis confidence using activation-weighted averaging.
+ * RESPONSE sphere: compute per-axis confidence.
  *
- * Problem with naive mean: dormant countermeasures (0.10) dilute active ones (1.15).
- * Fix: use power-mean (p=2) — squares emphasize high values, dormant values contribute minimally.
+ * Response params have two states:
+ *   - DORMANT (< 0.20): countermeasure is off, not needed
+ *   - ACTIVE  (>= 0.20): countermeasure is responding
  *
- * Example: mean(1.20, 0.10, 0.10) = 0.467 (looks cratered — WRONG)
- *          power2(1.20, 0.10, 0.10) = sqrt((1.44+0.01+0.01)/3) = 0.698 (better)
+ * Dormant params must NOT contribute to the axis — they are "off switches",
+ * not degradation indicators. Only active params drive the sphere shape.
  *
- * But we also want >1.0 when ANY param is actively pushing. So we use:
- *          max-biased: 0.4*max + 0.6*mean — the strongest response dominates
+ * If ALL params on an axis are dormant, the axis shows nominal (0.95) —
+ * "no response needed" looks the same as "all systems healthy".
+ *
+ * If ANY param is active, the axis shows the max active value —
+ * the strongest response drives the visual.
  */
 export function getResponseConfidences(storeParams: Record<string, ParameterState>): number[] {
-  const sums = [0, 0, 0, 0, 0]
-  const maxes = [0, 0, 0, 0, 0]
-  const counts = [0, 0, 0, 0, 0]
+  const DORMANT_THRESHOLD = 0.20
+
+  const activeSums = [0, 0, 0, 0, 0]
+  const activeMaxes = [0, 0, 0, 0, 0]
+  const activeCounts = [0, 0, 0, 0, 0]
 
   for (const p of RESPONSE_SPHERE_PARAMETERS) {
     const axis = GROUP_TO_AXIS[p.group]
     const state = storeParams[p.id]
-    if (state) {
-      sums[axis] += state.confidence
-      counts[axis]++
-      if (state.confidence > maxes[axis]) {
-        maxes[axis] = state.confidence
+    if (!state) continue
+
+    // Only count params that are actively responding
+    if (state.confidence >= DORMANT_THRESHOLD) {
+      activeSums[axis] += state.confidence
+      activeCounts[axis]++
+      if (state.confidence > activeMaxes[axis]) {
+        activeMaxes[axis] = state.confidence
       }
     }
   }
 
-  return sums.map((sum, i) => {
-    if (counts[i] === 0) return 0.95
-    const mean = sum / counts[i]
-    const max = maxes[i]
-    // Max-biased blend: strongest response dominates the axis visualization
-    // When one param pushes >1.0, the axis shows outward push even if others are dormant
-    return 0.4 * max + 0.6 * mean
+  return activeSums.map((sum, i) => {
+    if (activeCounts[i] === 0) {
+      // All params dormant on this axis — show nominal (no response needed = healthy)
+      return 0.95
+    }
+    const mean = sum / activeCounts[i]
+    const max = activeMaxes[i]
+    // Blend: max dominates but mean provides context
+    return 0.35 * max + 0.65 * mean
   })
 }
