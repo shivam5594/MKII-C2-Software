@@ -21,22 +21,34 @@ export function deriveResponseTargets(
   const composite = fusion.composite_confidence
   const gnssDenied = techniques.GNSS.health_status === 'DENIED' || techniques.GNSS.health_status === 'SPOOFED'
 
+  const bothFaults = faults.jamming && faults.spoofing
+
   return {
-    // INS backbone — boosted under spoofing (INS becomes primary cross-check)
-    // > 1.0 = actively compensating, visible as outward push on sphere
+    // INS backbone — boosted when GNSS unreliable (spoofing or denial)
+    // INS is the truth reference for inertial cross-check against spoofed GPS
     resp_inertial_lock: faults.spoofing ? 1.15 : gnssDenied ? 1.08 : 0.94,
 
-    // GNSS rejection — active when spoofing detected
-    resp_gnss_reject: spoofFlag ? 1.20 : faults.spoofing ? 0.90 : 0.10,
+    // GNSS rejection — exclude GNSS from EKF fusion
+    // Active during BOTH jamming (noisy/absent signals) and spoofing (false signals)
+    // Both require the EKF to stop trusting GNSS measurements
+    resp_gnss_reject: spoofFlag ? 1.20
+      : faults.spoofing ? 0.90
+      : gnssDenied ? 1.10        // jamming denied GNSS → also reject from fusion
+      : faults.jamming ? 0.80    // jamming degrading → begin exclusion
+      : 0.10,
 
-    // Anti-jam power — active when jamming
+    // Anti-jam power — RF countermeasure, active when jamming
     resp_antijam_power: faults.jamming ? 1.15 : techniques.GNSS.jamming_detected ? 0.70 : 0.10,
 
-    // CRPA null steering — tracks antijam
-    resp_crpa_null: faults.jamming ? 1.10 : techniques.GNSS.jamming_detected ? 0.60 : 0.10,
+    // CRPA null steering — spatial antenna nulling
+    // Active for jamming (null jammer direction) AND spoofing (null spoofer if detectable)
+    resp_crpa_null: bothFaults ? 1.18                  // max effort — multiple threats
+      : faults.jamming ? 1.10                           // null jammer direction
+      : faults.spoofing ? 0.85                           // attempt spoofer nulling (harder)
+      : techniques.GNSS.jamming_detected ? 0.60
+      : 0.10,
 
     // Technique activations: boost > 1.0 when compensating for GNSS denial
-    // These are the key algorithms that fill the navigation gap
     resp_tercom_activate: gnssDenied
       ? Math.min(1.20, techniques.TERCOM.confidence_score + 0.25)
       : anyFault
@@ -58,17 +70,29 @@ export function deriveResponseTargets(
     // EKF reweighting — aggressive when composite drops
     resp_ekf_reweight: composite < 0.6 ? 1.15 : composite < 0.85 ? 0.95 : 0.30,
 
-    // Altitude adjustment under jamming (terrain-following for TERCOM)
-    resp_alt_adjust: faults.jamming ? 0.85 : 0.15,
+    // Altitude reference adjustment
+    // Jamming: terrain-following mode for TERCOM correlation
+    // Spoofing: switch to barometric altitude (GPS altitude is falsified)
+    // Both: maximum altitude source switching
+    resp_alt_adjust: bothFaults ? 1.0
+      : faults.jamming ? 0.85
+      : faults.spoofing ? 0.75    // switch to baro alt, GPS alt diverging
+      : 0.15,
 
-    // Route modification under any fault
-    resp_route_modify: anyFault ? 0.75 : 0.10,
+    // Route modification — escalates with threat severity
+    // Single fault: moderate evasion
+    // Dual fault (jam + spoof): maximum evasion, consider abort
+    resp_route_modify: bothFaults ? 1.05   // critical — maximum evasion
+      : anyFault ? 0.75
+      : 0.10,
 
     // Fusion confidence mirror
     resp_fusion_conf: composite,
 
-    // Operator alert under any fault
-    resp_operator_alert: anyFault ? 0.90 : 0.10,
+    // Operator alert — escalates with dual fault
+    resp_operator_alert: bothFaults ? 1.10   // critical alert — dual threat
+      : anyFault ? 0.90
+      : 0.10,
   }
 }
 
